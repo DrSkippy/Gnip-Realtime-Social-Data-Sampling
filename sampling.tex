@@ -1,0 +1,525 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{array}
+
+\usepackage[group-separator={,}]{siunitx}
+
+
+\begin{document}
+\title{Social Media Activity \\ Time Series Signals and Sampling}
+\author{Scott Hendrickson, Gnip, Inc}
+
+\maketitle
+
+\section{Introduction}
+
+For many topics, the social media streams contain frequent enough data to create reliable, high-resolution volume-based signals.  But for the long tail of topics, we need to take more care in identifying on what time scale an activity time series signal is meaningful. This white paper addresses questions related to social media activity time series sampling, signal and confidence.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=4.0in]{./imgs/confidence.jpg}
+    \caption{Uncertainty in the estimated rate of activities goes down as we observe more events. }
+    \label{fig:confidence}
+\end{figure}
+
+\subsection{Motivating Questions}
+
+\begin{itemize}
+\item I plan to bucket data to estimate rate, how long should the buckets be? 
+\item How many activities should I target to collect per bucket?
+\item How many buckets do I aggregate to optimize the trade-off between signal sensitivity and signal latency?
+\item I want to minimize the activities I consume, what sampling factor should I use if I want my signal to have 1-hour sensitivity?
+\item How do I describe the trade-off between signal latency and rate uncertainty?
+\item How do I define confidence levels for rate estimates for low-frequency time series?
+\item \ldots
+\end{itemize}
+
+\subsection{Activity Rate}
+
+For all of these questions, it is useful to start toward an answer by defining the activity rate.
+
+\begin{equation}
+    \label{eq:rateEst}
+    \bar{r} = \frac{N}{T}
+\end{equation}
+where $N$ is the number of activities and $T$ period.  Our goals will be defined in terms of how many activities $N$ we can count to estimate $\bar{r}$ to the desired level of confidence. The next step is to define the signal we are trying to detect.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=4.0in]{./imgs/events.jpg}
+    \caption{Events and rate estimates}
+    \label{fig:events}
+\end{figure}
+
+%%
+\section{Signal}
+
+We have a activity time series-based signal when the activity rate changes with time more than the sensitivity threshold.  That is,
+
+\begin{equation}
+    \label{eq:signal}
+    | r(t_f) - r(t_i) | \geq \Delta r
+\end{equation}
+
+The time scale of the change, $T_l = t_f - t_i$, is the Signal Latency.  This definition implies that the we must observe activities for a time $T > T_l$ to observe the signal, $\Delta r$.
+
+\subsection{Signal-Confidence Criteria}
+
+We will be estimating the activity rate by Eq. \ref{eq:rateEst} by counting activities for a known time.  The number of counts in any given period will be distributed about the mean. As we count more activities, our estimate of rate will improve.  If we count thousands of activities per minute, our confidence of the estimate of activity rate will be very high after a short time.  For rare activities, we will have to count for a longer time before we have a high level of confidence in our rate estimate.
+
+Referring to the signal definition Eq. \ref{eq:signal}, the criteria that allows us to calculate confidence in terms of signal is, 
+
+\begin{equation}
+    \label{eq:criteria}
+    \delta r << \Delta r
+\end{equation}
+
+The variation of the observed number from the average number will decrease with increasing time or increasing rate (the number of activities counted).
+
+The help quantify this inequality, introduce a multiplier factor $\eta$ that describes how much larger the change in rate is compared to the uncertainty of the rate estimate:
+
+Parameterized the criteria,
+\begin{equation}
+    \label{eq:criteriaParam}
+    \eta \delta r = \Delta r
+\end{equation}
+where $\eta >> 1$ for cases where the criteria is fulfilled.
+
+As will be detailed below, the criteria represents trade-offs of number of the number activities (cost of collection and licensing), time (signal latency--how long we have to wait to know the rate has changed), confidence (reliability of estimates of rate), and size of change we can detect $\Delta r$ (the signal sensitivity).  
+
+\begin{figure}
+    \centering
+    \includegraphics[width=4.0in]{./imgs/signal.jpg}
+        \caption{A signal can be detected when the change in rate is greater than the uncertainty in the rate estimates.}
+    \label{fig:signal}
+\end{figure}
+
+These trade offs are summarized in the Table \ref{table:tradeoffs}.
+
+\begin{table}
+    \begin{tabular}{l| m{7cm}}
+     \hline
+Want to...  & Actions \\
+\hline
+Minimize Activities Analyzed   & (decrease $N$)  \\
+                                  & increase $\Delta R$ (decrease signal sensitivity)  \\
+                                  & decrease confidence (E.g. from 95\% to 90\% )  \\
+\hline	
+Increase Signal sensitivity   & (decrease $\Delta r$)  \\
+                                  & increase $T$ (increase number of buckets ($k$)  \\
+                                  & or increase bucket size ($\Delta t$) )  \\
+                                  & increase activity rate ($r$) by broadening filter or increase PowerTrack sampling \\
+\hline
+Decrease Signal Latency      & (decrease $T_l$)  \\
+                                 & decrease signal sensitivity $\Delta r$  \\
+                                 & decrease confidence factor ($\alpha$) \\
+                                 & increase activity rate ($r$) by broadening filter or increase PowerTrack sampling \\
+\hline
+Decrease Signal Uncertainty & (decrease $\delta r$ or increase $\eta$) \\
+                          	  & increase $T$ (increase number of buckets ($k$)  \\
+                                 & or increase bucket size ($\Delta t$) )  \\
+                                 & increase activity counts (increase $N$, $r$) by broadening filter or increase PowerTrack sampling \\
+\hline
+\end{tabular}
+\caption{Summary of model trade-offs.}
+\label{tab:tradeoff}
+\end{table}
+
+%%
+\section{Statistics of Time Series of Activities}
+
+\subsection{Time-Between Independent Activities}
+
+A workable model of counts of rare activities is that the inter-arrival times are expoentially distributed, 
+
+\begin{equation}
+    \label{eq:tbe}
+    p_{activity}(t) = r e^{-r t}
+\end{equation}
+
+This assumption leads the Poission distribution of activity counts over time.
+
+\subsection{Poisson Activity Probability}
+
+The probability of observing $n$ activities in time $t$ when the activity rate is $r$ is given by,
+\begin{equation}
+    \label{eq:poisson}
+    P(n) = \frac{e^{-r t} (r t)^n}{n!}
+\end{equation}
+
+The expected value is $E[n]=n=\bar{r} t$. The mean and variance of the Poisson distribution are both equal to $r$.
+
+\subsection{Poisson Confidence Intervals}
+
+We are counting activities in a defined time interval to estimate the activity rate $r$.  Confidence in the estimate of $r$ goes up as we count more and more activities. Confidence intervals for the Poisson For confidence level $1-\alpha$,
+
+\begin{equation}
+    \label{eq:chisqconf}
+    \frac{1}{2} \chi^2(\alpha/2;2n) \leq \hat{r} \leq \frac{1}{2} \chi^2(1-\alpha/2;2n+2)
+\end{equation}
+where $\chi^2$ is the inverse cumlative distrituion function, $CDF^{-1}(p; n)$, of the $\chi^2$ distribution.\footnote{A useful approximation to the exact interval is given by  $[ n(1 - \frac{1}{9n} - \frac{z_{\alpha}}{3\sqrt{n}})^3 , (n+1)(1- \frac{1}{9(n+1)} + \frac{z_{\alpha}}{3\sqrt{n+1}})^3]$. }
+Note that with this definition of $\alpha$, the a confidence interval of 90\% corresponds to $\alpha=0.1$.
+
+To determine the parameters of our data collection system, we find the value of $n$ for which the time interval and confidence level match our requirements.  Give a set of sensitivity, latency, etc. requirements, we can use the confidence interval to calculate any one of the parameters. 
+
+Calculations for various design choices and an unknown are illustrated in the next section.  First, let's look at some useful limits and approximations for calculating confidence intervals.
+
+\subsection{Less-Rare Activities}
+
+For large $n$, the normal approximation makes the interval calculation simpler. When we observe large values of n, the confidence interval can be estimated using the Normal approximation. For example, for $95\%$ confidence interval the interval is symmetric about the mean and given by,
+
+\begin{equation}
+    \label{eq:largenconf}
+    \bar{r} - 1.95 \sqrt{\bar{r}/n} \leq \hat{r} \leq \bar{r} + 1.95 \sqrt{\bar{r}/n}
+\end{equation}
+
+Confidence intervals for activity counts are shown int Table \ref{tab:conf}.
+
+\begin{table}
+    \begin{tabular}{r|c|c|c|c}
+     \hline
+$N$ & Bounds  & Interval & Bounds & Interval \\ 
+ & ($N>>1$) &  ($N>>1$) &  &  \\ 
+\hline 
+1 & - & - & [ 0.0513, 4.743 ] & 4.692\\ 
+2 & - & - & [ 0.3554, 6.295 ] & 5.940\\ 
+3 & - & - & [ 0.8177, 7.753 ] & 6.936\\ 
+4 & - & - & [ 1.366, 9.153 ] & 7.787\\ 
+5 & - & - & [ 1.970, 10.51 ] & 8.542\\ 
+6 & - & - & [ 2.613, 11.84 ] & 9.229\\ 
+7 & - & - & [ 3.285, 13.14 ] & 9.862\\ 
+8 & - & - & [ 3.980, 14.43 ] & 10.45\\ 
+9 & - & - & [ 4.695, 15.70 ] & 11.01\\ 
+10 & - & - & [ 5.425, 16.96 ] & 11.53\\ 
+20 & - & - & [ 13.25, 29.06 ] & 15.80\\ 
+30 & [ 20.99, 39.00 ] & 18.01 & [ 21.59, 40.69 ] & 19.09\\ 
+40 & [ 29.59, 50.40 ] & 20.80 & [ 30.19, 52.06 ] & 21.87\\ 
+50 & [ 38.36, 61.63 ] & 23.26 & [ 38.96, 63.28 ] & 24.32\\ 
+60 & [ 47.25, 72.74 ] & 25.48 & [ 47.85, 74.38 ] & 26.53\\ 
+70 & [ 56.23, 83.76 ] & 27.52 & [ 56.82, 85.40 ] & 28.57\\ 
+80 & [ 65.28, 94.71 ] & 29.42 & [ 65.87, 96.35 ] & 30.47\\ 
+90 & [ 74.39, 105.6 ] & 31.20 & [ 74.98, 107.2 ] & 32.25\\ 
+100 & [ 83.55, 116.4 ] & 32.89 & [ 84.13, 118.0 ] & 33.94\\ 
+200 & [ 176.7, 223.2 ] & 46.52 & [ 177.3, 224.8 ] & 47.55\\ 
+300 & [ 271.5, 328.4 ] & 56.97 & [ 272.0, 330.0 ] & 58.00\\ 
+400 & [ 367.1, 432.8 ] & 65.79 & [ 367.6, 434.4 ] & 66.81\\ 
+500 & [ 463.2, 536.7 ] & 73.56 & [ 463.7, 538.3 ] & 74.57\\ 
+750 & [ 704.9, 795.0 ] & 90.09 & [ 705.5, 796.6 ] & 91.10\\ 
+1000 & [ 947.9, 1052. ] & 104.0 & [ 948.5, 1053. ] & 105.0\\ 
+\hline
+\end{tabular}
+\caption{Confidence intervals for number of counts in time $T$.  Rate confidence range is $\delta N/T$.  The large $N$ approximation is shown when the boundaries of within 5\% of the exact value.}
+\label{tab:conf}
+\end{table}
+
+\subsection{Confidence Intervals on Bucketed Time series}
+
+For many reasons, counts may be collected in buckets of some pre-defined time length.  The rate information may by more naturally calculated by bucket rather than the total time $T$ required by our confidence requirements. In general, define the relationship between $T$ and the bucket size (constant) as,
+
+\begin{equation}
+    \label{eq:bucket}
+    \Delta t = \frac{T}{k}
+\end{equation}
+where $k$ is the number of buckets that we need to aggregate to observe for time $T$. This parameter can be used to calculate a corresponding signal latency, $k_l = T_l/\delta t$.
+
+Resolution times are interchangeable with number of buckets $k$ given $\Delta t << T$.  In general, the
+bucket resolution time will not be an even multiple of the bucket size.  In this case, imposing the calculation of average rate per bucket $\bar{r} = n/\Delta t$ adds another layer of variability.
+
+See example calculations below for a lookup table of factors.
+
+\subsection{Note on Social Media Pulse}
+
+In the case where something happens in the real world that many social media users can observe and react to (e.g. an earthquake or a celebrity baby photo link leaked on Twitter). The time series of activities will no longer fulfill independence and constant-rate requirements. In these cases, activities can be characterized by the mathematics of the Social Media Pulse (link!).
+
+These activities are likely to be associated with the change in rate, $\Delta r$, that is the signal we are looking for in the stream.
+
+\subsection{Model and Parameters}
+
+Table \ref{tab:summary} summarizes the parameters of the model.
+
+\begin{table}
+    \begin{tabular}{c| m{7cm}}
+     \hline
+Parameter  & Definition \\
+\hline	
+$N$ & Number of activities in time $T$\\
+$T$ & Observation time\\
+$\Delta t$ & Bucket size (for bucketed data where $\Delta t <T$) \\
+$k$ & Observation time measured in buckets ($k=T/\Delta t$) \\
+$r$ & Activity rate \\
+$\bar{r} = N/T$ & Estimate of activity rate \\
+$\delta r$ & Uncertainty of rate estimate \\
+$\alpha$ & Confidence fraction of rate estimate range\\
+$\Delta r$ & Change in activity rate that defines signal \\
+$T_l$ & Signal latency \\
+$\eta$ & Rate signal criteria factor \\
+\hline
+\end{tabular}
+\caption{Summary of model parameters.}
+\label{tab:summary}
+\end{table}
+
+%%
+\section{Examples}
+
+To  make this concrete and illustrate the use of the lookup tables, following are some sample calculations.
+
+\subsection{Estimate Signal Latency}
+
+To do \ldots
+
+\subsection{Estimate the Optimal PowerTrack Sampling Operator Value}
+
+To do \ldots
+
+\subsection{Estimate Signal Resolution}
+
+To do \ldots
+
+%%
+\section{Conclusion and References}
+
+This is intended to help you use the Gnip social data streams more effectively.  If you find errors or have comments, please email shendrickson@gnip.com. Thank you.
+
+%\section{Lookup Table}
+%
+%%% Table generated by formatTable utility %%
+%%% add \usepackage[group-separator={,}]{siunitx}
+%%%
+%\begin{table}
+%\begin{tabular}{|S|S|S|S|}
+%\hline
+%{Counts/Bucket} & { Buckets} & { Confidence} & { $\Delta Count$} \\
+%\hline
+%      1     &    10   &     91.31     &        0.472 7    \\
+%      1     &    20   &     90.85     &        0.349 6    \\
+%      1     &    30   &     89.73     &        0.290 3    \\
+%      1     &    40   &     90.32     &        0.253 2    \\
+%      1     &    50   &     90.06     &        0.223 4    \\
+%      1     &    60   &     89.74     &        0.207 7    \\
+%      1     &    70   &     89.58     &        0.190 1    \\
+%      1     &    80   &     89.77     &        0.178 0    \\
+%      1     &    90   &     90.02     &        0.170 3    \\
+%      2     &    10   &     88.34     &        0.636 4    \\
+%      2     &    20   &     88.42     &        0.476 2    \\
+%      2     &    30   &     90.24     &        0.419 4    \\
+%      2     &    40   &     89.65     &        0.361 5    \\
+%      2     &    50   &     90.31     &        0.323 5    \\
+%      2     &    60   &     89.76     &        0.295 1    \\
+%      2     &    70   &     90.25     &        0.281 7    \\
+%      2     &    80   &     90.48     &        0.259 3    \\
+%      2     &    90   &     90.01     &        0.241 8    \\
+%      3     &    10   &     89.20     &        0.818 2    \\
+%      3     &    20   &     90.80     &        0.603 9    \\
+%      3     &    30   &     90.16     &        0.500 0    \\
+%      3     &    40   &     89.45     &        0.439 0    \\
+%      3     &    50   &     90.23     &        0.392 2    \\
+%      3     &    60   &     90.23     &        0.357 6    \\
+%      3     &    70   &     90.33     &        0.338 0    \\
+%      3     &    80   &     89.98     &        0.312 8    \\
+%      3     &    90   &     89.79     &        0.296 7    \\
+%      4     &    10   &     89.77     &        0.954 5    \\
+%      4     &    20   &     90.58     &        0.714 3    \\
+%      4     &    30   &     89.93     &        0.580 6    \\
+%      4     &    40   &     89.67     &        0.500 0    \\
+%      4     &    50   &     89.87     &        0.451 0    \\
+%      4     &    60   &     89.89     &        0.418 0    \\
+%      4     &    70   &     89.68     &        0.387 3    \\
+%      4     &    80   &     90.03     &        0.358 0    \\
+%      4     &    90   &     89.77     &        0.340 7    \\
+%      5     &    10   &     88.95     &        1.045      \\
+%      5     &    20   &     89.51     &        0.785 7    \\
+%      5     &    30   &     89.32     &        0.645 2    \\
+%      5     &    40   &     90.11     &        0.573 2    \\
+%      5     &    50   &     90.31     &        0.509 8    \\
+%      5     &    60   &     90.18     &        0.467 2    \\
+%      5     &    70   &     90.32     &        0.443 7    \\
+%      5     &    80   &     90.15     &        0.407 4    \\
+%      5     &    90   &     90.01     &        0.373 6    \\
+%\hline
+%\end{tabular}
+%\end{table}
+%%% Table generated by formatTable utility %%
+%
+%%% Table generated by formatTable utility %%
+%%% add \usepackage[group-separator={,}]{siunitx}
+%%%
+%\begin{table}
+%\begin{tabular}{|S|S|S|S|}
+%\hline
+%{Counts/Bucket} & { Buckets} & { Confidence} & { $\Delta Count$} \\
+%\hline
+%      6     &    10   &     90.66     &        1.182      \\
+%      6     &    20   &     89.91     &        0.857 1    \\
+%      6     &    30   &     89.77     &        0.693 5    \\
+%      6     &    40   &     90.36     &        0.634 1    \\
+%      6     &    50   &     90     &        0.558 8    \\
+%      6     &    60   &     89.62     &        0.508 2    \\
+%      6     &    70   &     90.28     &        0.485 9    \\
+%      6     &    80   &     90.27     &        0.450 6    \\
+%      6     &    90   &     89.90     &        0.417 6    \\
+%      7     &    10   &     89.49     &        1.227      \\
+%      7     &    20   &     89.81     &        0.928 6    \\
+%      7     &    30   &     89.71     &        0.758 1    \\
+%      7     &    40   &     89.56     &        0.670 7    \\
+%      7     &    50   &     90.12     &        0.607 8    \\
+%      7     &    60   &     90.04     &        0.549 2    \\
+%      7     &    70   &     90.24     &        0.514 1    \\
+%      7     &    80   &     89.79     &        0.481 5    \\
+%      7     &    90   &     89.97     &        0.450 5    \\
+%      8     &    10   &     90.57     &        1.364      \\
+%      8     &    20   &     89.52     &        0.976 2    \\
+%      8     &    30   &     89.82     &        0.806 5    \\
+%      8     &    40   &     90.09     &        0.719 5    \\
+%      8     &    50   &     90.28     &        0.647 1    \\
+%      8     &    60   &     89.95     &        0.590 2    \\
+%      8     &    70   &     89.94     &        0.549 3    \\
+%      8     &    80   &     89.86     &        0.512 3    \\
+%      8     &    90   &     89.80     &        0.478 0    \\
+%      9     &    10   &     89.57     &        1.409      \\
+%      9     &    20   &     89.86     &        1.048      \\
+%      9     &    30   &     89.77     &        0.871 0    \\
+%      9     &    40   &     89.88     &        0.768 3    \\
+%      9     &    50   &     89.61     &        0.676 5    \\
+%      9     &    60   &     90.03     &        0.631 1    \\
+%      9     &    70   &     89.97     &        0.584 5    \\
+%      9     &    80   &     90.10     &        0.555 6    \\
+%      9     &    90   &     90.01     &        0.511 0    \\
+%     10      &    10   &     89.87     &        1.500      \\
+%     10      &    20   &     89.37     &        1.095      \\
+%     10      &    30   &     89.93     &        0.919 4    \\
+%     10      &    40   &     90.10     &        0.792 7    \\
+%     10      &    50   &     89.70     &        0.715 7    \\
+%     10      &    60   &     89.66     &        0.655 7    \\
+%     10      &    70   &     89.98     &        0.612 7    \\
+%     10      &    80   &     89.89     &        0.574 1    \\
+%     10      &    90   &     90.12     &        0.544 0    \\
+%     11      &    10   &     90.46     &        1.591      \\
+%\hline
+%\end{tabular}
+%\end{table}
+%%% Table generated by formatTable utility %%
+%
+%%% Table generated by formatTable utility %%
+%%% add \usepackage[group-separator={,}]{siunitx}
+%%%
+%\begin{table}
+%\begin{tabular}{|S|S|S|S|}
+%\hline
+%{Counts/Bucket} & { Buckets} & { Confidence} & { $\Delta Count$} \\
+%\hline
+%     11      &    20   &     90.16     &        1.167      \\
+%     11      &    30   &     90.28     &        0.951 6    \\
+%     11      &    40   &     89.96     &        0.841 5    \\
+%     11      &    50   &     89.94     &        0.764 7    \\
+%     11      &    60   &     90.12     &        0.696 7    \\
+%     11      &    70   &     89.77     &        0.633 8    \\
+%     11      &    80   &     89.94     &        0.598 8    \\
+%     11      &    90   &     90.17     &        0.571 4    \\
+%     12      &    10   &     90.43     &        1.636      \\
+%     12      &    20   &     89.30     &        1.190      \\
+%     12      &    30   &     90.21     &        1      \\
+%     12      &    40   &     90.10     &        0.890 2    \\
+%     12      &    50   &     90.17     &        0.803 9    \\
+%     12      &    60   &     90.15     &        0.729 5    \\
+%     12      &    70   &     89.88     &        0.676 1    \\
+%     12      &    80   &     90.11     &        0.629 6    \\
+%     12      &    90   &     89.80     &        0.598 9    \\
+%     13      &    10   &     89.78     &        1.682      \\
+%     13      &    20   &     90.14     &        1.286      \\
+%     13      &    30   &     90.28     &        1.048      \\
+%     13      &    40   &     89.79     &        0.914 6    \\
+%     13      &    50   &     90.07     &        0.833 3    \\
+%     13      &    60   &     90.35     &        0.754 1    \\
+%     13      &    70   &     89.77     &        0.697 2    \\
+%     13      &    80   &     90.16     &        0.654 3    \\
+%     13      &    90   &     90.04     &        0.615 4    \\
+%     14      &    10   &     90.02     &        1.773      \\
+%     14      &    20   &     90.38     &        1.310      \\
+%     14      &    30   &     89.69     &        1.097      \\
+%     14      &    40   &     89.88     &        0.939 0    \\
+%     14      &    50   &     90.06     &        0.862 7    \\
+%     14      &    60   &     89.65     &        0.762 3    \\
+%     14      &    70   &     90.05     &        0.725 4    \\
+%     14      &    80   &     89.97     &        0.691 4    \\
+%     14      &    90   &     89.96     &        0.642 9    \\
+%     15      &    10   &     90.39     &        1.864      \\
+%     15      &    20   &     89.95     &        1.333      \\
+%     15      &    30   &     90.05     &        1.129      \\
+%     15      &    40   &     90.06     &        0.987 8    \\
+%     15      &    50   &     89.75     &        0.872 5    \\
+%     15      &    60   &     89.94     &        0.803 3    \\
+%     15      &    70   &     90.05     &        0.753 5    \\
+%     15      &    80   &     89.97     &        0.697 5    \\
+%     15      &    90   &     90.20     &        0.675 8    \\
+%     16      &    10   &     90.30     &        1.909      \\
+%\hline
+%\end{tabular}
+%\end{table}
+%% Table generated by formatTable utility %%
+
+
+%%%%%%%
+
+%\subsection{Doubling Period}
+%
+%The time it takes to double $V$ is noted as $t_{2x}$ and given by,
+%\begin{eqnarray*}
+%    \label{eq:double-calc}
+%     V(t)  = & V_0 \exp ( \alpha t ) \\
+%     V(t_{2x})  = & V_0 \exp ( \alpha (t_{2x}) ) \\
+%    = & 2 V_0 \exp ( \alpha t ) \\
+%    2 = & \exp(\alpha t_{2x} \\
+%    \log 2 = & \alpha t_{2x}
+%\end{eqnarray*}
+%Solving for $t_{2x}$,
+%\begin{equation}
+%    \label{eq:double}
+%    t_{2x} = \frac{\log 2}{\alpha} 
+%\end{equation}
+%
+%\subsection{Apply to some twitter data}
+
+%\begin{figure}
+%    \centering
+%    \includegraphics[width=4.0in]{stacked_year_fig.png}
+%    \caption{Log-Twitter Volume Through 2010}
+%    \label{simulationfigure}
+%\end{figure}
+
+%The Table shows 4 regions of exponential growth in monthly Twitter volume from its beginnings in 2006 through 2010. The first period ends in April 2007, the second ends in December 2008.  The third period of faster growth is short, lasting only a few months. The last period spans August 2009 through December 2010.
+%
+%\begin{table}
+%    \begin{tabular}{|c|r|l|l|l}
+%     \hline
+%Month    & Twitter Volume  &       LN(Volume) & Parameters \\
+%\hline	
+%1&	638&	6.45833& 	$\alpha = 0.61948$ per month \\
+%2&	1,918&	7.55903&	 $t_{2x} = 1.11891$	months \\
+%3&	2,002&	7.60190& 	85.8\%	growth/month \\
+%\ldots & & &		 \\
+%14&	2,005,933&	14.5116&		 \\
+%\hline
+%15&	2,785,237&	14.8398& $\alpha = 	0.1868$ /month \\
+%16&	3,016,238&	14.9195& 	$t_{2x} = 3.70976$	months \\
+%17&	3,673,111&	15.1165&	 20.5\%	growth/month \\
+%\ldots & & &			 \\
+%34&	42,517,816&	17.5654&	 \\
+%\hline	
+%35&	56,861,590&	17.8561&	$\alpha = 0.48043$ /month \\
+%36&	72,301,087&	18.0963&	$t_{2x} = 1.44275$	months \\
+%37&	117,404,715&	18.5811&	61.7\%	growth/month \\
+%\ldots & & &		\\
+%41&	358,626,288&	19.6977&		 \\
+%\hline
+%42&	393,489,407&	19.7905&	$\alpha = 0.11678$ /month \\
+%43&	458,444,722&	19.9433&$t_{2x} = 	5.93501$	months \\
+%44&	527,824,897&	20.0842&	12.4\%	growth/month \\
+%\ldots & & &		 \\
+%58&	2,549,581,037&	21.6591&		 \\
+%\hline
+%\end{tabular}
+%\end{table}
+
+
+\end{document}
