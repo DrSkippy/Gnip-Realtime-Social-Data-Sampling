@@ -13,7 +13,7 @@
 
 \section{Introduction}
 
-For many topics, the social media streams contain frequent enough data to create reliable, high-resolution volume-based signals.  But for the long tail of topics, we need to take more care in identifying on what time scale an activity time series signal is meaningful. This white paper addresses questions related to social media activity time series sampling, signal and confidence.
+For many topics that are very interesting, the social media streams contain frequent enough data to create reliable, high-resolution volume-based signals.  But for the long tail of topics, we need to take more care in identifying on what time scale an activity time series signal is meaningful. This white paper addresses questions related to social media activity time series sampling, signal and confidence.
 
 \begin{figure}
     \centering
@@ -160,7 +160,7 @@ We are counting activities in a defined time interval to estimate the activity r
 where $\chi^2$ is the inverse cumlative distrituion function, $CDF^{-1}(p; n)$, of the $\chi^2$ distribution.\footnote{A useful approximation to the exact interval is given by  $[ n(1 - \frac{1}{9n} - \frac{z_{\alpha}}{3\sqrt{n}})^3 , (n+1)(1- \frac{1}{9(n+1)} + \frac{z_{\alpha}}{3\sqrt{n+1}})^3]$. }
 Note that with this definition of $\alpha$, the a confidence interval of 90\% corresponds to $\alpha=0.1$.
 
-To determine the parameters of our data collection system, we find the value of $n$ for which the time interval and confidence level match our requirements.  Give a set of sensitivity, latency, etc. requirements, we can use the confidence interval to calculate any one of the parameters. 
+To determine the parameters of our data collection system, we find the value of $n$ for which the time interval and confidence level match our requirements.  Given a set of sensitivity, latency, etc. requirements, we can use the confidence interval to calculate any one of the parameters. 
 
 Calculations for various design choices and an unknown are illustrated in the next section.  First, let's look at some useful limits and approximations for calculating confidence intervals.
 
