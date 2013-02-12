@@ -6,3 +6,4 @@ Notes and examples for effective sampling of social data activities to create si
 Revision history:
 
   DRAFT 2013-02-11
+
