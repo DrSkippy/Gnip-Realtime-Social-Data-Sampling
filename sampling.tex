@@ -220,7 +220,7 @@ For many reasons, counts may be collected in buckets of some pre-defined time le
     \label{eq:bucket}
     \Delta t = \frac{T}{k}
 \end{equation}
-where $k$ is the number of buckets that we need to aggregate to observe for time $T$. This parameter can be used to calculate a corresponding signal latency, $k_l = T_l/\delta t$.
+where $k$ is the number of buckets that we need to aggregate to observe for time $T$. This parameter can be used to calculate a corresponding signal latency, $k_l = T_l/\Delta t$.
 
 Resolution times are interchangeable with number of buckets $k$ given $\Delta t << T$.  In general, the
 bucket resolution time will not be an even multiple of the bucket size.  In this case, imposing the calculation of average rate per bucket $\bar{r} = n/\Delta t$ adds another layer of variability.
