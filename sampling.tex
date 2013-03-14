@@ -1,19 +1,34 @@
 \documentclass{article}
 \usepackage{graphicx}
 \usepackage{array}
-
 \usepackage[group-separator={,}]{siunitx}
 
+% prettier multiple authors (2013-03-12, JM)
+\usepackage{authblk}
+
+
+
+
+
+
+
+\title{Social Media Activity \\ \large{Time Series Signals and Sampling} }
+\author[]{Scott Hendrickson}
+
+% If we want to include these at some point:
+%\author[]{Brian Lehman}
+%\author[]{Joshua Montague}
+\affil[]{Gnip, Inc.}
 
 \begin{document}
-\title{Social Media Activity \\ Time Series Signals and Sampling}
-\author{Scott Hendrickson, Gnip, Inc}
+%\title{Social Media Activity \\ Time Series Signals and Sampling}
+%\author{Scott Hendrickson, Brian Lehman, Joshua Montague \newline Gnip, Inc.}
 
 \maketitle
 
 \section{Introduction}
 
-For many topics that are very interesting, the social media streams contain frequent enough data to create reliable, high-resolution volume-based signals.  But for the long tail of topics, we need to take more care in identifying on what time scale an activity time series signal is meaningful. This white paper addresses questions related to social media activity time series sampling, signal and confidence.
+For many topics of interest, social media streams contain data with significant volume and frequency to create reliable, high-resolution signals.  But for the long tail of topics, we need to take care in identifying the time scale over which an activity time series signal is meaningful. This white paper addresses questions related to social media activity time series sampling, signal, and confidence.
 
 \begin{figure}
     \centering
@@ -22,7 +37,7 @@ For many topics that are very interesting, the social media streams contain freq
     \label{fig:confidence}
 \end{figure}
 
-\subsection{Motivating Questions}
+\subsection{Motivating Questions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{itemize}
 \item I plan to bucket data to estimate rate, how long should the buckets be? 
@@ -34,7 +49,7 @@ For many topics that are very interesting, the social media streams contain freq
 \item \ldots
 \end{itemize}
 
-\subsection{Activity Rate}
+\subsection{Activity Rate} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 For all of these questions, it is useful to start toward an answer by defining the activity rate.
 
@@ -52,7 +67,7 @@ where $N$ is the number of activities and $T$ period.  Our goals will be defined
 \end{figure}
 
 %%
-\section{Signal}
+\section{Signal} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We have a activity time series-based signal when the activity rate changes with time more than the sensitivity threshold.  That is,
 
@@ -63,29 +78,28 @@ We have a activity time series-based signal when the activity rate changes with 
 
 The time scale of the change, $T_l = t_f - t_i$, is the Signal Latency.  This definition implies that the we must observe activities for a time $T > T_l$ to observe the signal, $\Delta r$.
 
-\subsection{Signal-Confidence Criteria}
+\subsection{Signal-Confidence Criteria} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We will be estimating the activity rate by Eq. \ref{eq:rateEst} by counting activities for a known time.  The number of counts in any given period will be distributed about the mean. As we count more activities, our estimate of rate will improve.  If we count thousands of activities per minute, our confidence of the estimate of activity rate will be very high after a short time.  For rare activities, we will have to count for a longer time before we have a high level of confidence in our rate estimate.
 
-Referring to the signal definition Eq. \ref{eq:signal}, the criteria that allows us to calculate confidence in terms of signal is, 
+Referring to the signal definition Eq. \ref{eq:signal}, the we can establish a rough criteria for confidence in terms of signal: 
 
 \begin{equation}
     \label{eq:criteria}
-    \delta r << \Delta r
+    \delta r << \Delta r.
 \end{equation}
 
 The variation of the observed number from the average number will decrease with increasing time or increasing rate (the number of activities counted).
 
-The help quantify this inequality, introduce a multiplier factor $\eta$ that describes how much larger the change in rate is compared to the uncertainty of the rate estimate:
+The help quantify this inequality, we introduce a criteria factor $\eta$ that quantifies how much larger the change in rate should be, relative to the uncertainty in the rate estimate:
 
-Parameterized the criteria,
 \begin{equation}
     \label{eq:criteriaParam}
-    \eta \delta r = \Delta r
+    \eta \times \delta r = \Delta r
 \end{equation}
-where $\eta >> 1$ for cases where the criteria is fulfilled.
+where $\eta >> 1$ when the criteria is fulfilled.
 
-As will be detailed below, the criteria represents trade-offs of number of the number activities (cost of collection and licensing), time (signal latency--how long we have to wait to know the rate has changed), confidence (reliability of estimates of rate), and size of change we can detect $\Delta r$ (the signal sensitivity).  
+As will be detailed below, the criteria represents trade-offs of number of the number activities (cost of collection and licensing), time (signal latency--how long we have to wait to know the rate has changed), confidence (reliability of estimates of rate), and the size of the rate change we can detect $\Delta r$. These trade offs are summarized in the Table \ref{tab:tradeoff}.
 
 \begin{figure}
     \centering
@@ -94,9 +108,11 @@ As will be detailed below, the criteria represents trade-offs of number of the n
     \label{fig:signal}
 \end{figure}
 
-These trade offs are summarized in the Table \ref{table:tradeoffs}.
+
 
 \begin{table}
+\caption{Summary of model trade-offs.}
+\label{tab:tradeoff}
     \begin{tabular}{l| m{7cm}}
      \hline
 Want to...  & Actions \\
@@ -121,25 +137,24 @@ Decrease Signal Uncertainty & (decrease $\delta r$ or increase $\eta$) \\
                                  & increase activity counts (increase $N$, $r$) by broadening filter or increase PowerTrack sampling \\
 \hline
 \end{tabular}
-\caption{Summary of model trade-offs.}
-\label{tab:tradeoff}
+
 \end{table}
 
 %%
-\section{Statistics of Time Series of Activities}
+\section{Statistics of Time Series of Activities} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Time-Between Independent Activities}
+\subsection{Time-Between Independent Activities} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-A workable model of counts of rare activities is that the inter-arrival times are expoentially distributed, 
+A workable model of counts of rare activities is that the inter-arrival times are exponentially distributed, 
 
 \begin{equation}
     \label{eq:tbe}
     p_{activity}(t) = r e^{-r t}
 \end{equation}
 
-This assumption leads the Poission distribution of activity counts over time.
+This assumption leads a Poission distribution of activity counts over time.
 
-\subsection{Poisson Activity Probability}
+\subsection{Poisson Activity Probability} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The probability of observing $n$ activities in time $t$ when the activity rate is $r$ is given by,
 \begin{equation}
@@ -149,22 +164,24 @@ The probability of observing $n$ activities in time $t$ when the activity rate i
 
 The expected value is $E[n]=n=\bar{r} t$. The mean and variance of the Poisson distribution are both equal to $r$.
 
-\subsection{Poisson Confidence Intervals}
+\subsection{Poisson Confidence Intervals} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We are counting activities in a defined time interval to estimate the activity rate $r$.  Confidence in the estimate of $r$ goes up as we count more and more activities. Confidence intervals for the Poisson For confidence level $1-\alpha$,
+We are counting activities in a defined time interval to estimate the activity rate $r$.  Confidence in the estimate of $r$ goes up as we count more and more activities. Confidence intervals for the Poisson distribution with confidence level $1-\alpha$ are given by
 
 \begin{equation}
     \label{eq:chisqconf}
     \frac{1}{2} \chi^2(\alpha/2;2n) \leq \hat{r} \leq \frac{1}{2} \chi^2(1-\alpha/2;2n+2)
 \end{equation}
-where $\chi^2$ is the inverse cumlative distrituion function, $CDF^{-1}(p; n)$, of the $\chi^2$ distribution.\footnote{A useful approximation to the exact interval is given by  $[ n(1 - \frac{1}{9n} - \frac{z_{\alpha}}{3\sqrt{n}})^3 , (n+1)(1- \frac{1}{9(n+1)} + \frac{z_{\alpha}}{3\sqrt{n+1}})^3]$. }
-Note that with this definition of $\alpha$, the a confidence interval of 90\% corresponds to $\alpha=0.1$.
+where $\chi^2$ is the inverse cumulative distribution function, $CDF^{-1}(p; n)$, of the $\chi^2$ distribution.\footnote{A useful approximation to the exact interval is given by  $[ n(1 - \frac{1}{9n} - \frac{z_{\alpha}}{3\sqrt{n}})^3 , (n+1)(1- \frac{1}{9(n+1)} + \frac{z_{\alpha}}{3\sqrt{n+1}})^3]$. }
+Note that with this definition of $\alpha$, a confidence interval of 90\% corresponds to $\alpha=0.1$.
+
+% Make the connection between n and N more explicit here
 
 To determine the parameters of our data collection system, we find the value of $n$ for which the time interval and confidence level match our requirements.  Given a set of sensitivity, latency, etc. requirements, we can use the confidence interval to calculate any one of the parameters. 
 
 Calculations for various design choices and an unknown are illustrated in the next section.  First, let's look at some useful limits and approximations for calculating confidence intervals.
 
-\subsection{Less-Rare Activities}
+\subsection{Less-Rare Activities} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 For large $n$, the normal approximation makes the interval calculation simpler. When we observe large values of n, the confidence interval can be estimated using the Normal approximation. For example, for $95\%$ confidence interval the interval is symmetric about the mean and given by,
 
@@ -173,7 +190,7 @@ For large $n$, the normal approximation makes the interval calculation simpler. 
     \bar{r} - 1.95 \sqrt{\bar{r}/n} \leq \hat{r} \leq \bar{r} + 1.95 \sqrt{\bar{r}/n}
 \end{equation}
 
-Confidence intervals for activity counts are shown int Table \ref{tab:conf}.
+Confidence intervals for activity counts are shown in Table \ref{tab:conf}.
 
 \begin{table}
     \begin{tabular}{r|c|c|c|c}
@@ -212,7 +229,10 @@ $N$ & Bounds  & Interval & Bounds & Interval \\
 \label{tab:conf}
 \end{table}
 
-\subsection{Confidence Intervals on Bucketed Time series}
+% \delta N (table caption) should be defined somewhere.
+
+
+\subsection{Confidence Intervals on Bucketed Time series} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 For many reasons, counts may be collected in buckets of some pre-defined time length.  The rate information may by more naturally calculated by bucket rather than the total time $T$ required by our confidence requirements. In general, define the relationship between $T$ and the bucket size (constant) as,
 
@@ -227,13 +247,13 @@ bucket resolution time will not be an even multiple of the bucket size.  In this
 
 See example calculations below for a lookup table of factors.
 
-\subsection{Note on Social Media Pulse}
+\subsection{Note on Social Media Pulse} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 In the case where something happens in the real world that many social media users can observe and react to (e.g. an earthquake or a celebrity baby photo link leaked on Twitter). The time series of activities will no longer fulfill independence and constant-rate requirements. In these cases, activities can be characterized by the mathematics of the Social Media Pulse (link!).
 
 These activities are likely to be associated with the change in rate, $\Delta r$, that is the signal we are looking for in the stream.
 
-\subsection{Model and Parameters}
+\subsection{Model and Parameters} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Table \ref{tab:summary} summarizes the parameters of the model.
 
@@ -260,24 +280,75 @@ $\eta$ & Rate signal criteria factor \\
 \end{table}
 
 %%
-\section{Examples}
+\section{Examples} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To  make this concrete and illustrate the use of the lookup tables, following are some sample calculations.
+To make this concrete and illustrate the use of the lookup tables, following are some sample calculations.
 
-\subsection{Estimate Signal Latency}
-
-To do \ldots
-
-\subsection{Estimate the Optimal PowerTrack Sampling Operator Value}
+\subsection{Estimate Signal Latency} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 To do \ldots
 
-\subsection{Estimate Signal Resolution}
+\subsection{Estimate the Optimal PowerTrack Sampling Operator Value} %%%%%%%%%%%%%%%%%%%
 
 To do \ldots
+
+
+
+
+\subsection{Estimate Signal Resolution} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% first pass at calc, 2013-03-12, JM
+
+Suppose we would like to determine the magnitude of a signal change needed to 
+classify it as significant. As shown in Equation~\ref{eq:criteriaParam}, 
+classifying a signal $\Delta r$ as significant depends on the choice of criteria factor 
+$\eta$ and the observation parameters that determine the uncertainty $\delta r$. 
+Specifically, we will need to choose a criteria factor $\eta$ and confidence level 
+$1-\alpha$, and our observation will be characterized by total activity counts $N$ 
+and total time $T$.
+
+%Based on the Poisson confidence intervals in Equation~\ref{eq:chisqconf}, our 
+%significant signal must then either be 
+%
+%\begin{equation}
+%	\label{eq:sigSig1}
+%\Delta r - \bar{r} > \frac{1}{2} \chi^2(1-\alpha/2;2N+2), 
+%\end{equation}
+%or lower than 
+%
+%\begin{equation}
+%	\label{eq:sigSig2}
+%\bar{r} - \Delta r < \frac{1}{2} \chi^2(\alpha/2;2N). 
+%\end{equation}
+
+
+Let us assume we have decided to classify as significant a signal with $\eta$ = 10, or 
+$\Delta r > 10\times\delta r$. Furthermore, we have chosen a 90\% confidence interval 
+($\alpha = 0.1$), and observed $N$=10,000 activities over a period of $T$=1 minute 
+(60 seconds) for an estimated activity rate of $\bar r = 167~\si{\per\second}$. We next use 
+Equation~\ref{eq:chisqconf} to calculate the interval of activities for our 
+90\% confidence level, and divide by observation period $T$ to obtain the corresponding 
+minimum significant activity rate $\delta r = 5~\si{\per\second}$. Recall, however, 
+that we have also specified a criteria factor $\eta = 10$. Therefore, in this example, 
+in order to classify the change in rate as significant, we must observe a change at the 
+level of 
+$\Delta r = \eta \times \delta r = 10 \times 5~\si{\per\second} = 50~\si{\per\second}$. 
+For an increasing activity rate, this corresponds to a total activity rate of 
+$167~\si{\per\second} + 50~\si{\per\second} = 217~\si{\per\second}$. For a decreasing 
+rate, $217~\si{\per\second}$.
+
+
+% Procedure for this calculation:
+% 	Using the tables.py script, calculate poisson_bounds1() for N=10000, confidence=0.90, 
+% 	and the resulting bounds (to one decimal) are [9836.1, 10166.1]. This is an interval of count 
+%	of activities; the corresponding bounds on the rate are given by this interval divided by 
+% 	the time period, T=60 s: (10166.1-9836.1)/60 ~ 5 /s. 
+
+
+
+
 
 %%
-\section{Conclusion and References}
+\section{Conclusion and References} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This is intended to help you use the Gnip social data streams more effectively.  If you find errors or have comments, please email shendrickson@gnip.com. Thank you.
 
