@@ -82,7 +82,7 @@ The time scale of the change, $T_l = t_f - t_i$, is the Signal Latency.  This de
 
 We will be estimating the activity rate by Eq. \ref{eq:rateEst} by counting activities for a known time.  The number of counts in any given period will be distributed about the mean. As we count more activities, our estimate of rate will improve.  If we count thousands of activities per minute, our confidence of the estimate of activity rate will be very high after a short time.  For rare activities, we will have to count for a longer time before we have a high level of confidence in our rate estimate.
 
-Referring to the signal definition Eq. \ref{eq:signal}, the we can establish a rough criteria for confidence in terms of signal: 
+Referring to the signal definition Eq. \ref{eq:signal}, we can establish a rough criteria for confidence in terms of signal: 
 
 \begin{equation}
     \label{eq:criteria}
@@ -118,7 +118,7 @@ As will be detailed below, the criteria represents trade-offs of number of the n
 Want to...  & Actions \\
 \hline
 Minimize Activities Analyzed   & (decrease $N$)  \\
-                                  & increase $\Delta R$ (decrease signal sensitivity)  \\
+                                  & increase $\Delta r$ (decrease signal sensitivity)  \\
                                   & decrease confidence (E.g. from 95\% to 90\% )  \\
 \hline	
 Increase Signal sensitivity   & (decrease $\Delta r$)  \\
@@ -162,7 +162,7 @@ The probability of observing $n$ activities in time $t$ when the activity rate i
     P(n) = \frac{e^{-r t} (r t)^n}{n!}
 \end{equation}
 
-The expected value is $E[n]=n=\bar{r} t$. The mean and variance of the Poisson distribution are both equal to $r$.
+The expected value is $E[n]=n=rt$. The mean and variance of the Poisson distribution are both equal to $r$.
 
 \subsection{Poisson Confidence Intervals} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -170,7 +170,7 @@ We are counting activities in a defined time interval to estimate the activity r
 
 \begin{equation}
     \label{eq:chisqconf}
-    \frac{1}{2} \chi^2(\alpha/2;2n) \leq \hat{r} \leq \frac{1}{2} \chi^2(1-\alpha/2;2n+2)
+    \frac{1}{2T} \chi^2(\alpha/2;2n) \leq r \leq \frac{1}{2T} \chi^2(1-\alpha/2;2n+2)
 \end{equation}
 where $\chi^2$ is the inverse cumulative distribution function, $CDF^{-1}(p; n)$, of the $\chi^2$ distribution.\footnote{A useful approximation to the exact interval is given by  $[ n(1 - \frac{1}{9n} - \frac{z_{\alpha}}{3\sqrt{n}})^3 , (n+1)(1- \frac{1}{9(n+1)} + \frac{z_{\alpha}}{3\sqrt{n+1}})^3]$. }
 Note that with this definition of $\alpha$, a confidence interval of 90\% corresponds to $\alpha=0.1$.
@@ -192,6 +192,7 @@ For large $n$, the normal approximation makes the interval calculation simpler. 
 
 Confidence intervals for activity counts are shown in Table \ref{tab:conf}.
 
+%SUGGESTION: Remove the intervals of approximation, add a column of interval/N to show the narrowing of the C.I. as N increases.
 \begin{table}
     \begin{tabular}{r|c|c|c|c}
      \hline
@@ -228,6 +229,7 @@ $N$ & Bounds  & Interval & Bounds & Interval \\
 \caption{Confidence intervals for number of counts in time $T$.  Rate confidence range is $\delta N/T$.  The large $N$ approximation is shown when the boundaries of within 5\% of the exact value.}
 \label{tab:conf}
 \end{table}
+
 
 % \delta N (table caption) should be defined somewhere.
 
@@ -284,13 +286,22 @@ $\eta$ & Rate signal criteria factor \\
 
 To make this concrete and illustrate the use of the lookup tables, following are some sample calculations.
 
-\subsection{Estimate Signal Latency} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Estimate the Optimal PowerTrack Sampling Operator Value} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 To do \ldots
 
-\subsection{Estimate the Optimal PowerTrack Sampling Operator Value} %%%%%%%%%%%%%%%%%%%
+\subsection{Estimate Signal Latency} %%%%%%%%%%%%%%%%%%%
 
-To do \ldots
+
+% first pass at calc, 2013-04-18, BL
+
+Question: How long does it take to find a signal?\
+
+As an example for calculating $T_{l}$, we choose a specific signal $\Delta r = \frac{10}{T}$.  The time $T_{l}$ that it takes to observe this signal $\Delta r$ depends on a certain threshold number of activities $N_t$, which we will find in Table 2.  As $N$ increases, the $90\%$ confidence interval length $I$ narrows around $N$ because the uncertainty $\delta r$ decreases, which supports the aim of Equation 3.  We just need to find the value for $N$ at which point $\delta r$ has decreased enough to allow us to see any potential signal $\Delta r$.  
+This point can be referenced with $N_t$.  Choosing $\eta=1$, we see in Table 2 that for $\Delta r = \frac{10}{T}$, we must have $N\geq7$ causing $I > \eta \times 10$ in order to observe a potential signal.  Notice that $N_t=7$ is the point after which we could first observe a signal.  Thus, we say that $T_{l}>T_{N_t}$ defines the time that it takes to observe a signal, which means that signal latency is greater than the amount of time that it takes to collect $N_t$ activities.\\
+
+We can decrease $T_{l}$ through several options.  First, we could try improving the rate at which we achieve $N_t$ by  increasing our PowerTrack sampling.  Otherwise, we could decrease $T_{l}$ as we narrow $I$ through a lower confidence level $(1-\alpha)$.  The lower confidence level tightens $I$ around smaller $N$ allowing the potential signal to become clearer faster, but this goal is accomplished at the cost of maintaining less confidence.  Another basic option is to simply choose a smaller signal size such as $\Delta r = \frac{5}{T}$ from our previous example.  All of these strategies would decrease $T_{l}$.
+
 
 
 
@@ -334,7 +345,7 @@ level of
 $\Delta r = \eta \times \delta r = 10 \times 5~\si{\per\second} = 50~\si{\per\second}$. 
 For an increasing activity rate, this corresponds to a total activity rate of 
 $167~\si{\per\second} + 50~\si{\per\second} = 217~\si{\per\second}$. For a decreasing 
-rate, $217~\si{\per\second}$.
+rate, $117~\si{\per\second}$.
 
 
 % Procedure for this calculation:
