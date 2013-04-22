@@ -6,18 +6,12 @@
 % prettier multiple authors (2013-03-12, JM)
 \usepackage{authblk}
 
-
-
-
-
-
-
 \title{Social Media Activity \\ \large{Time Series Signals and Sampling} }
 \author[]{Scott Hendrickson}
 
 % If we want to include these at some point:
-%\author[]{Brian Lehman}
-%\author[]{Joshua Montague}
+\author[]{Brian Lehman}
+\author[]{Joshua Montague}
 \affil[]{Gnip, Inc.}
 
 \begin{document}
@@ -28,7 +22,36 @@
 
 \section{Introduction}
 
-For many topics of interest, social media streams contain data with significant volume and frequency to create reliable, high-resolution signals.  But for the long tail of topics, we need to take care in identifying the time scale over which an activity time series signal is meaningful. This white paper addresses questions related to social media activity time series sampling, signal, and confidence.
+For many topics of interest, social media streams contain data with significant volume and frequency to create reliable, high-resolution signals in the time series.  But for the long tail of topics, we need to take some care in identifying the time scale over which an activity time series signal is meaningful. This white paper addresses questions related to social media activity time series sampling, signal, and confidence. We start with short discussion of Gnip's Twitter sampling algorithm, and they address the process of choosing sample sizes, time periods and signal strengths for reliable signals.
+
+\subsection{Sampling and Filtering} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+There are two approaches to sampling the a firehose of social data. Both involve reducing the number of activities in the stream to an intermediate and manageable size for further analysis.  First, Gnip provides a filtering on keywords to select only the portion of the stream that is relevant to the topic you want to analyze. For example, if you are interesting in tracking the super bowl, you might start with a broad stream defined by the terms ``superbowl'' ``super bowl'' and ``contains:xxiii'', the latter for the number of the Superbowl that might be seen in hashtags or short links. This would limit the social media stream to only the activities explicitly related to the Superbowl.
+
+A second approach would be to filter this stream to known fraction of the total firehose. For example, the Superbowl stream of activities might be very large on Twitter, so we might add a sampling operator to talk only 12\% of the matched tweets. For example, we can add ``sample:12''.
+
+To illustrate how this set of filters might inform sampling decisions, it is useful to know a little about how Gnip's sampling algorithms work.  Some key features of the Gnip sampled streams:
+
+\begin{enumerate}
+	\item 1\% resolution
+	\item Progressively inclusive. E.g. the 2\% stream includes the activities from the 1\% stream, plus another 1\%, and so on \ldots independent of keyword filter.
+	\item Sample tweets are identified as portion of full stream belonging to sample, then filtered by keywords.
+\end{enumerate}
+
+From these three properties, it is clear that in the long term, the sample of 12\% of the stream filtered on activities containing ``superbowl'' ``super bowl'' and ``contains:xxiii'' (let's say that is 20\% of the stream to make this a concrete example).  In this case we expect to observe:
+
+\begin{equation}
+    \label{eq:sbsample}
+    N_{obs,superbowl} = N_{activities} \times sample \times matching = 0.10(0.20)N_{activities}
+\end{equation}
+
+It is fairly clear that if Gnip were to filter on keywords then follow this with sampling, that this would be a reasonable estimate of $N_{obs,superbowl}$ on time scale of the sampling calculation. However, this process would require relaxing prperty 2 in the list above.  Do the sample followed by the keyword filter gives a slightly more complicated short term behavior.
+
+The core question becomes: ``For a required level of certainty that a signal change has been observed, how long or how many events must we observe?''
+
+The following addresses this question in general.  The last section illustrates the general discussion with specific examples.
+
+\subsection{Motivating Questions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{figure}
     \centering
@@ -37,13 +60,14 @@ For many topics of interest, social media streams contain data with significant 
     \label{fig:confidence}
 \end{figure}
 
-\subsection{Motivating Questions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+If you have been asked questions like these, you may be interested to understand this paper and the it may be useful for you to review the sample calculations to understand how to estimate the trade-off of sampling time, activity rate and signal strength.
 
 \begin{itemize}
-\item I plan to bucket data to estimate rate, how long should the buckets be? 
+\item I plan to bucket data to estimate rate, how long (time) should the buckets be? 
 \item How many activities should I target to collect per bucket?
-\item How many buckets do I aggregate to optimize the trade-off between signal sensitivity and signal latency?
+\item The activity rate has doubled from 5 counts, to 10 counts between two of my buckets. Is this a signal of change? Or merely expected variation for low-frequency events?
 \item I want to minimize the activities I consume, what sampling factor should I use if I want my signal to have 1-hour sensitivity?
+\item How many buckets do I aggregate to optimize the trade-off between signal sensitivity and signal latency?
 \item How do I describe the trade-off between signal latency and rate uncertainty?
 \item How do I define confidence levels for rate estimates for low-frequency time series?
 \item \ldots
@@ -51,13 +75,13 @@ For many topics of interest, social media streams contain data with significant 
 
 \subsection{Activity Rate} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-For all of these questions, it is useful to start toward an answer by defining the activity rate.
+For all of these questions, it is useful to start by defining the activity rate in the common way.
 
 \begin{equation}
     \label{eq:rateEst}
     \bar{r} = \frac{N}{T}
 \end{equation}
-where $N$ is the number of activities and $T$ period.  Our goals will be defined in terms of how many activities $N$ we can count to estimate $\bar{r}$ to the desired level of confidence. The next step is to define the signal we are trying to detect.
+where $N$ is the number of activities and $T$ period.  Our goal will be defined in terms of how many activities $N$ we can count to estimate $\bar{r}$ to the desired level of confidence. The next step is to define the signal we are trying to detect.
 
 \begin{figure}
     \centering
@@ -69,7 +93,7 @@ where $N$ is the number of activities and $T$ period.  Our goals will be defined
 %%
 \section{Signal} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We have a activity time series-based signal when the activity rate changes with time more than the sensitivity threshold.  That is,
+We nee to define ``signal'' in a way that provides for tractable calculation.  There is a trade off between our confidence in the estimated activity rate magnitude of the change in  activity rate.  If our estimate of activity rate is very uncertain, large variations are merely expected variations for infrequent events.  Conversely, if your confidence in our estimate of activity rate is high (say, better than 95\%, for example) then we can detect small changes in activity rate.  We say we observe a valid signal in a time series when the activity rate has changed by more than the sensitivity $\Delta r$.  That is,
 
 \begin{equation}
     \label{eq:signal}
@@ -80,7 +104,7 @@ The time scale of the change, $T_l = t_f - t_i$, is the Signal Latency.  This de
 
 \subsection{Signal-Confidence Criteria} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We will be estimating the activity rate by Eq. \ref{eq:rateEst} by counting activities for a known time.  The number of counts in any given period will be distributed about the mean. As we count more activities, our estimate of rate will improve.  If we count thousands of activities per minute, our confidence of the estimate of activity rate will be very high after a short time.  For rare activities, we will have to count for a longer time before we have a high level of confidence in our rate estimate.
+We will be estimating the activity rate by Eq. \ref{eq:rateEst} by counting activities for a pre-determined time.  The number of counts in any given period (sample) will be distributed about the true mean of the distribution. As we count more activities, our estimate of rate will converge to the true value.  If we count thousands of activities per minute, our confidence of the estimate of activity rate will be very high after a short time.  For rare activities, we will have to count for a longer time before we have a high level of confidence in our rate estimate.
 
 Referring to the signal definition Eq. \ref{eq:signal}, we can establish a rough criteria for confidence in terms of signal: 
 
@@ -95,7 +119,7 @@ The help quantify this inequality, we introduce a criteria factor $\eta$ that qu
 
 \begin{equation}
     \label{eq:criteriaParam}
-    \eta \times \delta r = \Delta r
+    \eta \delta r = \Delta r
 \end{equation}
 where $\eta >> 1$ when the criteria is fulfilled.
 
@@ -282,9 +306,9 @@ $\eta$ & Rate signal criteria factor \\
 \end{table}
 
 %%
-\section{Examples} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Example Calculations} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To make this concrete and illustrate the use of the lookup tables, following are some sample calculations.
+We present some example calculation to make this concrete and illustrate the use of the lookup tables.
 
 \subsection{Estimate the Optimal PowerTrack Sampling Operator Value} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -292,19 +316,15 @@ To do \ldots
 
 \subsection{Estimate Signal Latency} %%%%%%%%%%%%%%%%%%%
 
-
 % first pass at calc, 2013-04-18, BL
 
-Question: How long does it take to find a signal?\
+Question: How long does it take to identify a change in the activity rate as a signal?
 
-As an example for calculating $T_{l}$, we choose a specific signal $\Delta r = \frac{10}{T}$.  The time $T_{l}$ that it takes to observe this signal $\Delta r$ depends on a certain threshold number of activities $N_t$, which we will find in Table 2.  As $N$ increases, the $90\%$ confidence interval length $I$ narrows around $N$ because the uncertainty $\delta r$ decreases, which supports the aim of Equation 3.  We just need to find the value for $N$ at which point $\delta r$ has decreased enough to allow us to see any potential signal $\Delta r$.  
-This point can be referenced with $N_t$.  Choosing $\eta=1$, we see in Table 2 that for $\Delta r = \frac{10}{T}$, we must have $N\geq7$ causing $I > \eta \times 10$ in order to observe a potential signal.  Notice that $N_t=7$ is the point after which we could first observe a signal.  Thus, we say that $T_{l}>T_{N_t}$ defines the time that it takes to observe a signal, which means that signal latency is greater than the amount of time that it takes to collect $N_t$ activities.\\
+As an example for calculating $T_{l}$, we choose a specific signal $\Delta r = \frac{10}{T}$.  The time $T_{l}$ that it takes to observe this signal $\Delta r$ depends the number of activities $N_t$. Because activities seem infrequent, we will look this up in Table 2.  As $N$ increases, the $90\%$ confidence interval length $I$ narrows around $N$ because the uncertainty $\delta r$ decreases.  See Equation \ref{...}3.  We need to find the value for $N$ at which point $\delta r$ has decreased enough to allow us to see any potential signal $\Delta r$.  
+
+This point can be referenced with $N_t$.  Choosing $\eta=1$, we see in Table 2 that for $\Delta r = \frac{10}{T}$, we must have $N\geq7$ causing $I > \eta \times 10$ in order to observe a potential signal.  Notice that $N_t=7$ is the point after which we could first observe a signal.  Thus, we say that $T_{l}>T_{N_t}$ defines the time that it takes to observe a signal, which means that signal latency is greater than the amount of time that it takes to collect $N_t$ activities.
 
 We can decrease $T_{l}$ through several options.  First, we could try improving the rate at which we achieve $N_t$ by  increasing our PowerTrack sampling.  Otherwise, we could decrease $T_{l}$ as we narrow $I$ through a lower confidence level $(1-\alpha)$.  The lower confidence level tightens $I$ around smaller $N$ allowing the potential signal to become clearer faster, but this goal is accomplished at the cost of maintaining less confidence.  Another basic option is to simply choose a smaller signal size such as $\Delta r = \frac{5}{T}$ from our previous example.  All of these strategies would decrease $T_{l}$.
-
-
-
-
 
 \subsection{Estimate Signal Resolution} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % first pass at calc, 2013-03-12, JM
