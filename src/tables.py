@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import scipy.stats as scis
 import math
-import csv
 
 confidence = .90
 alpha = (1-confidence)/2.
@@ -28,7 +27,7 @@ def int_fmt(i):
 EPS = 0.05
 ns = [1,2,3,4,5,6,7,8,9,10,20,30,40,50,60,70,80,90,100,200,300,400,500,750,1000]
 with open("./n_intervals.csv","wb") as of:
-    res = ['N','Bounds (N>>1)', 'Interval (N>>1)', 'Bounds', 'Interval']
+    res = ['N','Bounds (N>>1)', 'Interval (N>>1)', 'Bounds', 'Interval', 'Relative Interval']
     of.write(" & ".join(res) + "\\\\ \n\hline \n")
     for n in ns:
         s = float(n)
@@ -39,13 +38,15 @@ with open("./n_intervals.csv","wb") as of:
                 int_fmt(i1),
                 "%2.4f"%dc(i1, 1),
                 int_fmt(i2),
-                "%2.4f"%dc(i2, 1)]
+                "%2.4f"%dc(i2, 1),
+                "%2.4f"%(dc(i2, 1)/float(n))]
         else:
             res = [str(n),
                 "-",
                 "-",
                 int_fmt(i2),
-                "%2.4f"%dc(i2, 1)]
+                "%2.4f"%dc(i2, 1),
+                "%2.4f"%(dc(i2, 1)/float(n))]
         of.write(" & ".join(res) + "\\\\ \n")
 
 
