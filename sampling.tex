@@ -1,79 +1,106 @@
 \documentclass{article}
+
 \usepackage{graphicx}
 \usepackage{array}
 \usepackage[group-separator={,}]{siunitx}
+\usepackage{authblk}	% prettier multiple authors
 
-% prettier multiple authors (2013-03-12, JM)
-\usepackage{authblk}
-
-\title{Social Media Activity \\ \large{Time Series Signals and Sampling} }
+% should the title explicitly mention twitter? could this someday be a part of a collection from different publishers?
+\title{Real-time Social Data Collection: \\ \Large{Time Series Signals and Sampling} }
 \author[]{Scott Hendrickson}
-
-% If we want to include these at some point:
 \author[]{Brian Lehman}
 \author[]{Joshua Montague}
-\affil[]{Gnip, Inc.}
+\affil[]{ \Large{Gnip, Inc.} }
 
 \begin{document}
-%\title{Social Media Activity \\ Time Series Signals and Sampling}
-%\author{Scott Hendrickson, Brian Lehman, Joshua Montague \newline Gnip, Inc.}
+
 
 \maketitle
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
-For many topics of interest, social media streams contain data with significant volume and frequency to create reliable, high-resolution signals in the time series.  But for the long tail of topics, we need to take some care in identifying the time scale over which an activity time series signal is meaningful. This white paper addresses questions related to social media activity time series sampling, signal, and confidence. We start with short discussion of Gnip's Twitter sampling algorithm, and they address the process of choosing sample sizes, time periods and signal strengths for reliable signals.
+For many topics of interest, social media streams contain data with significant volume and frequency to create reliable, high-resolution signals in the time series.  But for the 
+% define/explain/clarify "long tail"
+long tail of topics, we need to take some care in identifying the 
+% is it necessarily 'time scale' or is it more 'whatever parameters you care about' ?
+time scale over which an activity time series signal is meaningful. This white paper addresses questions related to social media activity time series sampling, signal, and confidence. We start with short discussion of Gnip's Twitter sampling algorithm, and then address the process of choosing sample sizes, time periods, and signal strengths for reliable signals.
 
-\subsection{Sampling and Filtering} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Filtering and Sampling} 
 
-There are two approaches to sampling the a firehose of social data. Both involve reducing the number of activities in the stream to an intermediate and manageable size for further analysis.  First, Gnip provides a filtering on keywords to select only the portion of the stream that is relevant to the topic you want to analyze. For example, if you are interesting in tracking the super bowl, you might start with a broad stream defined by the terms ``superbowl'' ``super bowl'' and ``contains:xxiii'', the latter for the number of the Superbowl that might be seen in hashtags or short links. This would limit the social media stream to only the activities explicitly related to the Superbowl.
+There are two approaches to sampling a firehose of social data. Both involve reducing the number of activities in the stream to an intermediate and manageable size for further analysis.  
+% also important that the subset of filtered data is more focused, distilled
+% "in the first approach..."
+First, Gnip provides a filtering on keywords to select only the portion of the stream that is relevant to the topic you want to analyze. For example, if you are interesting in tracking the Super Bowl, you might start with a broad stream defined by the keywords ``superbowl" ``super bowl" and ``contains:xlvii", the latter being the Roman numeral of the Super Bowl as might be seen in hashtags or short links. This would limit the social media stream to a subset of the firehose, likely to have explicit relation to the Super Bowl.
 
-A second approach would be to filter this stream to known fraction of the total firehose. For example, the Superbowl stream of activities might be very large on Twitter, so we might add a sampling operator to talk only 12\% of the matched tweets. For example, we can add ``sample:12''.
+% "the second approach..." which is kind of an add-on to the first one, not a separate operator
+A second approach would be to filter this stream to a known fraction of the total firehose. For example, the 
+% here, we're talking 
+Super Bowl stream of activities might be very large on Twitter, so we might add a sampling operator to collect only 12\% of the matched tweets. For example, we can add ``sample:12''.
 
 To illustrate how this set of filters might inform sampling decisions, it is useful to know a little about how Gnip's sampling algorithms work.  Some key features of the Gnip sampled streams:
 
+% this comes across as being twitter-specific, should we worry about other publishers?
 \begin{enumerate}
-	\item 1\% resolution
-	\item Progressively inclusive. E.g. the 2\% stream includes the activities from the 1\% stream, plus another 1\%, and so on \ldots independent of keyword filter.
-	\item Sample tweets are identified as portion of full stream belonging to sample, then filtered by keywords.
+	\item 1\% resolution 
+	% are people going to know what this means?
+	\item Progressively inclusive (i.e. the 2\% stream includes the activities from the 1\% stream plus an additional 1\%, etc., independent of keyword filter)
+	% rewrite / clarify. sampling operator happens first, then filter by PT rules?
+	\item Tweets are first sampled from the firehose, then filtered by keywords 
 \end{enumerate}
 
-From these three properties, it is clear that in the long term, the sample of 12\% of the stream filtered on activities containing ``superbowl'' ``super bowl'' and ``contains:xxiii'' (let's say that is 20\% of the stream to make this a concrete example).  In this case we expect to observe:
+
+Combining filtering and sampling, we can calculate that an $x=12$\% sample of the firehose activities, $N_f$, filtered on activities containing ``superbowl'' ``super bowl'' and ``contains:xlvii" (assume these rules return $y=5$\% of the stream to make this a concrete example) will leave us with
+
+% add # for daily activity volume & make it an actual concrete example
 
 \begin{equation}
     \label{eq:sbsample}
-    N_{obs,superbowl} = N_{activities} \times sample \times matching = 0.10(0.20)N_{activities}
+    N_{obs} = x \times y \times N_f = 0.12\times0.05\times N_f
 \end{equation}
+observed activities. 
 
-It is fairly clear that if Gnip were to filter on keywords then follow this with sampling, that this would be a reasonable estimate of $N_{obs,superbowl}$ on time scale of the sampling calculation. However, this process would require relaxing prperty 2 in the list above.  Do the sample followed by the keyword filter gives a slightly more complicated short term behavior.
+If Gnip were to filter on keywords first, followed by sampling, then Equation~\ref{eq:sbsample} would also be a reasonable estimate of $N_{obs}$ on the time scale of the sampling calculation. However, this process would require relaxing property 2 in the list above. 
+% ^ Emphasize why we care about property 2. 
+Doing the sample first, followed by the keyword filter gives a slightly more complicated short term behavior.
+% what's the value of informing of this complicated short term behavior? Either clarify or remove the mention
 
-The core question becomes: ``For a required level of certainty that a signal change has been observed, how long or how many events must we observe?''
 
-The following addresses this question in general.  The last section illustrates the general discussion with specific examples.
+In many situations, the main question is as follows: \emph{``How many events (or for how long) must we observe in order to detect a signal change with a specified level of certainty?"} Answering this question requires an understanding of collection and analysis of streaming social data and the trade-offs between sampling time, activity rates, and signal strength. 
 
-\subsection{Motivating Questions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{figure}
-    \centering
-    \includegraphics[width=4.0in]{./imgs/confidence.jpg}
-    \caption{Uncertainty in the estimated rate of activities goes down as we observe more events. }
-    \label{fig:confidence}
-\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Motivating Questions} 
 
-If you have been asked questions like these, you may be interested to understand this paper and the it may be useful for you to review the sample calculations to understand how to estimate the trade-off of sampling time, activity rate and signal strength.
+To progress toward an answer to the main question above, one might get more specific with some of the following questions:
 
 \begin{itemize}
-\item I plan to bucket data to estimate rate, how long (time) should the buckets be? 
-\item How many activities should I target to collect per bucket?
-\item The activity rate has doubled from 5 counts, to 10 counts between two of my buckets. Is this a signal of change? Or merely expected variation for low-frequency events?
-\item I want to minimize the activities I consume, what sampling factor should I use if I want my signal to have 1-hour sensitivity?
+\item I plan to bucket the data in order to estimate a rate, how big (time) should the buckets be? 
+\item How many activities should I target to collect in each bucket?
+\item The activity rate has doubled from five counts to ten counts between two of my buckets. Is this a significant change? Or is this expected variation due to low-frequency events?
+\item I want to minimize the number of total activities I consume, what sampling factor should I use if I want my signal to have 1-hour sensitivity?
 \item How many buckets do I aggregate to optimize the trade-off between signal sensitivity and signal latency?
 \item How do I describe the trade-off between signal latency and rate uncertainty?
-\item How do I define confidence levels for rate estimates for low-frequency time series?
-\item \ldots
+\item How do I define confidence levels on rate estimates for a low-frequency time series?
+%\item \ldots
 \end{itemize}
 
-\subsection{Activity Rate} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%If you have been asked questions like these, you may be interested to understand this paper and it may be useful for you to review the sample calculations to understand how to estimate the trade-off of sampling time, activity rate and signal strength.
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Signal} 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{Activity Rate} 
 
 For all of these questions, it is useful to start by defining the activity rate in the common way.
 
@@ -83,17 +110,40 @@ For all of these questions, it is useful to start by defining the activity rate 
 \end{equation}
 where $N$ is the number of activities and $T$ period.  Our goal will be defined in terms of how many activities $N$ we can count to estimate $\bar{r}$ to the desired level of confidence. The next step is to define the signal we are trying to detect.
 
-\begin{figure}
+
+
+%%%%%
+% figure
+%
+\begin{figure}[h]
+    	%\centering
+	\begin{center}
+		\includegraphics[width=4.0in]{./imgs/confidence.jpg}
+	\end{center}
+	\caption{Uncertainty in the estimated rate of activities goes down as we observe more events. }
+    	\label{fig:confidence}
+\end{figure}
+%
+%
+%%%%%
+
+
+%%%%%
+% figure
+%
+\begin{figure}[h]
     \centering
     \includegraphics[width=4.0in]{./imgs/events.jpg}
     \caption{Events and rate estimates}
     \label{fig:events}
 \end{figure}
+%
+%
+%%%%%
 
-%%
-\section{Signal} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We nee to define ``signal'' in a way that provides for tractable calculation.  There is a trade off between our confidence in the estimated activity rate magnitude of the change in  activity rate.  If our estimate of activity rate is very uncertain, large variations are merely expected variations for infrequent events.  Conversely, if your confidence in our estimate of activity rate is high (say, better than 95\%, for example) then we can detect small changes in activity rate.  We say we observe a valid signal in a time series when the activity rate has changed by more than the sensitivity $\Delta r$.  That is,
+
+We need to define ``signal'' in a way that provides for tractable calculation.  There is a trade off between our confidence in the estimated activity rate magnitude of the change in  activity rate.  If our estimate of activity rate is very uncertain, large variations are merely expected variations for infrequent events.  Conversely, if your confidence in our estimate of activity rate is high (say, better than 95\%, for example) then we can detect small changes in activity rate.  We say we observe a valid signal in a time series when the activity rate has changed by more than the sensitivity $\Delta r$.  That is,
 
 \begin{equation}
     \label{eq:signal}
@@ -102,7 +152,8 @@ We nee to define ``signal'' in a way that provides for tractable calculation.  T
 
 The time scale of the change, $T_l = t_f - t_i$, is the Signal Latency.  This definition implies that the we must observe activities for a time $T > T_l$ to observe the signal, $\Delta r$.
 
-\subsection{Signal-Confidence Criteria} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Signal-Confidence Criteria} 
 
 We will be estimating the activity rate by Eq. \ref{eq:rateEst} by counting activities for a pre-determined time.  The number of counts in any given period (sample) will be distributed about the true mean of the distribution. As we count more activities, our estimate of rate will converge to the true value.  If we count thousands of activities per minute, our confidence of the estimate of activity rate will be very high after a short time.  For rare activities, we will have to count for a longer time before we have a high level of confidence in our rate estimate.
 
@@ -125,13 +176,19 @@ where $\eta >> 1$ when the criteria is fulfilled.
 
 As will be detailed below, the criteria represents trade-offs of number of the number activities (cost of collection and licensing), time (signal latency--how long we have to wait to know the rate has changed), confidence (reliability of estimates of rate), and the size of the rate change we can detect $\Delta r$. These trade offs are summarized in the Table \ref{tab:tradeoff}.
 
-\begin{figure}
+
+%%%%%
+% figure
+%
+\begin{figure}[h]
     \centering
     \includegraphics[width=4.0in]{./imgs/signal.jpg}
         \caption{A signal can be detected when the change in rate is greater than the uncertainty in the rate estimates.}
     \label{fig:signal}
 \end{figure}
-
+%
+%
+%%%%%
 
 
 \begin{table}
@@ -164,10 +221,13 @@ Decrease Signal Uncertainty & (decrease $\delta r$ or increase $\eta$) \\
 
 \end{table}
 
-%%
-\section{Statistics of Time Series of Activities} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Time-Between Independent Activities} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Statistics of Time Series of Activities} 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Time-Between Independent Activities} 
 
 A workable model of counts of rare activities is that the inter-arrival times are exponentially distributed, 
 
@@ -178,7 +238,8 @@ A workable model of counts of rare activities is that the inter-arrival times ar
 
 This assumption leads a Poission distribution of activity counts over time.
 
-\subsection{Poisson Activity Probability} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Poisson Activity Probability} 
 
 The probability of observing $n$ activities in time $t$ when the activity rate is $r$ is given by,
 \begin{equation}
@@ -188,7 +249,8 @@ The probability of observing $n$ activities in time $t$ when the activity rate i
 
 The expected value is $E[n]=n=rt$. The mean and variance of the Poisson distribution are both equal to $r$.
 
-\subsection{Poisson Confidence Intervals} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Poisson Confidence Intervals} 
 
 We are counting activities in a defined time interval to estimate the activity rate $r$.  Confidence in the estimate of $r$ goes up as we count more and more activities. Confidence intervals for the Poisson distribution with confidence level $1-\alpha$ are given by
 
@@ -205,7 +267,8 @@ To determine the parameters of our data collection system, we find the value of 
 
 Calculations for various design choices and an unknown are illustrated in the next section.  First, let's look at some useful limits and approximations for calculating confidence intervals.
 
-\subsection{Less-Rare Activities} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Less-Rare Activities} 
 
 For large $n$, the normal approximation makes the interval calculation simpler. When we observe large values of n, the confidence interval can be estimated using the Normal approximation. For example, for $95\%$ confidence interval the interval is symmetric about the mean and given by,
 
@@ -257,8 +320,8 @@ $N$ & Bounds  & Interval & Bounds & Interval \\
 
 % \delta N (table caption) should be defined somewhere.
 
-
-\subsection{Confidence Intervals on Bucketed Time series} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Confidence Intervals on Bucketed Time series}
 
 For many reasons, counts may be collected in buckets of some pre-defined time length.  The rate information may by more naturally calculated by bucket rather than the total time $T$ required by our confidence requirements. In general, define the relationship between $T$ and the bucket size (constant) as,
 
@@ -273,13 +336,15 @@ bucket resolution time will not be an even multiple of the bucket size.  In this
 
 See example calculations below for a lookup table of factors.
 
-\subsection{Note on Social Media Pulse} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Note on Social Media Pulse} 
 
 In the case where something happens in the real world that many social media users can observe and react to (e.g. an earthquake or a celebrity baby photo link leaked on Twitter). The time series of activities will no longer fulfill independence and constant-rate requirements. In these cases, activities can be characterized by the mathematics of the Social Media Pulse (link!).
 
 These activities are likely to be associated with the change in rate, $\Delta r$, that is the signal we are looking for in the stream.
 
-\subsection{Model and Parameters} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Model and Parameters} 
 
 Table \ref{tab:summary} summarizes the parameters of the model.
 
@@ -305,16 +370,18 @@ $\eta$ & Rate signal criteria factor \\
 \label{tab:summary}
 \end{table}
 
-%%
-\section{Example Calculations} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Example Calculations} 
 
 We present some example calculation to make this concrete and illustrate the use of the lookup tables.
 
-\subsection{Estimate the Optimal PowerTrack Sampling Operator Value} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Estimate the Optimal PowerTrack Sampling Operator Value} 
 
 To do \ldots
 
-\subsection{Estimate Signal Latency} %%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Estimate Signal Latency} 
 
 % first pass at calc, 2013-04-18, BL
 
@@ -326,7 +393,8 @@ This point can be referenced with $N_t$.  Choosing $\eta=1$, we see in Table 2 t
 
 We can decrease $T_{l}$ through several options.  First, we could try improving the rate at which we achieve $N_t$ by  increasing our PowerTrack sampling.  Otherwise, we could decrease $T_{l}$ as we narrow $I$ through a lower confidence level $(1-\alpha)$.  The lower confidence level tightens $I$ around smaller $N$ allowing the potential signal to become clearer faster, but this goal is accomplished at the cost of maintaining less confidence.  Another basic option is to simply choose a smaller signal size such as $\Delta r = \frac{5}{T}$ from our previous example.  All of these strategies would decrease $T_{l}$.
 
-\subsection{Estimate Signal Resolution} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Estimate Signal Resolution}
 % first pass at calc, 2013-03-12, JM
 
 Suppose we would like to determine the magnitude of a signal change needed to 
@@ -376,10 +444,8 @@ rate, $117~\si{\per\second}$.
 
 
 
-
-
-%%
-\section{Conclusion and References} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion and References} 
 
 This is intended to help you use the Gnip social data streams more effectively.  If you find errors or have comments, please email shendrickson@gnip.com. Thank you.
 
