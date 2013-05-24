@@ -7,6 +7,8 @@ Notes and examples for effective sampling of social data activities.
 Revision history:
 ----------------
 
+2013-05-23: text edits 
+
 2013-04-23: text edits in Sections 1 & 2, additional notes 
 
 2013-04-22: add intro, minor edits throughout
