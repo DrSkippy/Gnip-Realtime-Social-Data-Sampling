@@ -143,7 +143,7 @@ So far, we have work our way to the point where we are trying to determine how m
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Signal Sensitivity}
 
-To see how we may do this, consider the trade off between our confidence in the estimated activity rate and the magnitude of the change in activity rate we can detect.  If our estimate of activity rate is very uncertain, large variations are merely expected variations for infrequent events.  Conversely, if your confidence in our estimate of activity rate is high (say, better than 95\%, for example) then we can detect small changes in activity rate.  Therefore, we say we observe a valid signal in a time series when the activity rate has changed by more than the rate Signal Sensitivity, $\Delta r$.  That is,
+To see how we may do this, consider the trade off between our confidence in the estimated activity rate and the magnitude of the change in activity rate we can detect.  If our estimate of activity rate is very uncertain, large variations are merely expected variations for infrequent events.  Conversely, if your confidence in our estimate of activity rate is high (say, better than 95\%, for example) then we can detect small relative changes in activity rate.  Therefore, we say we observe a valid signal in a time series when the activity rate has changed by more than the rate Signal Sensitivity, $\Delta r$.  That is,
 
 \begin{equation}
     \label{eq:signal}
@@ -155,7 +155,9 @@ The time scale of the change, $T_l = t_f - t_i$, is the Signal Latency.  This de
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Signal Sensitivity--Confidence Criteria} 
 
-We will be estimating the activity rate by Eq. \ref{eq:rateEst} by counting activities for a determined time period.  The number of counts in any given period will be distributed about the true mean of the distribution. As we count more activities, our estimate of rate will converge toward the true value.  If we count thousands of activities per minute, our confidence of the estimate of activity rate will be very high after a short time.  For rare activities, we will have to count for a longer time before we have a high level of confidence in our rate estimate.
+It is useful to combine Signal Sensitivity and Confidence Interval to make practical calculations. 
+
+We will be estimating the activity rate by Eq. \ref{eq:rateEst} by counting activities for a determined time period.  The number of counts in any given period will be distributed about the true mean of the distribution. As we count more activities, our estimate of rate will converge toward the true value.  If we count thousands of activities per minute, our confidence of the estimate of activity rate will be very high after a short time.  For rare activities, we will have to count for a longer time before we have a high level of confidence in our rate estimate. This is illustrated in Figure \ref{fig:confidence}.
 
 %%%%%
 % figure
@@ -170,29 +172,28 @@ We will be estimating the activity rate by Eq. \ref{eq:rateEst} by counting acti
 %
 %%%%%
 
-Referring to the Signal Sensitivity definition Eq. \ref{eq:signal}, we can establish a rough criteria for confidence in terms of signal: 
+Referring to the Signal Sensitivity definition Eq. \ref{eq:signal}, we can establish a rough criteria for confidence in terms of relative signal: 
 
 \begin{equation}
     \label{eq:criteria}
-    \delta r << \Delta r.
+    \frac{\delta r}{\bar{r}_{max}} << \frac{\Delta r}{\bar{r}_{max}}.
 \end{equation}
+where $\bar{r}_{max}$ will be the lower rate estimate (first if detecting rising activity rate but last if detecting falling activity rate).
 
-The variation of the observed number from the average number will decrease with increasing events (time or increasing rate (the number of activities counted).
-
-The help quantify this inequality, we introduce a criteria factor $\eta$ that quantifies how much larger the change in rate should be, relative to the uncertainty in the rate estimate:
+The relative variation of the observed number from the average number will decrease with an increasing number events (time or increasing rate (the number of activities counted). The help quantify this inequality, we introduce a criteria factor $\eta$ that quantifies how much larger the change in rate should be, relative to the uncertainty in the rate estimate:
 
 \begin{equation}
     \label{eq:criteriaParam}
-    \eta \delta r = \Delta r
+    \frac{\eta \delta r}{\bar{r}_{max}} << \frac{\Delta r}{\bar{r}_{max}}
 \end{equation}
-where $\eta >> 1$ when the criteria is fulfilled.
+where $\eta \ge 1$.
 
 This criteria represents a trade off of the number of activities (cost of collection and licensing), time (Signal Latency--how long we have to wait to know the rate has changed), confidence (reliability of estimates of rate), and Signal Sensitivity (the size of the rate change we can detect), $\Delta r$. These trade offs are summarized in the Table \ref{tab:tradeoff}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Summary of Parameters and Trade offs}
 
-For reference, we assamble the parameters definitions and a table summarizing trade off in this section before moving into the details of calculating confidence intervals for rare events in the next section.  Table \ref{tab:summary} summarizes the parameters of the model. Table \ref{tab:tradeoff} summarizes the trade offs in parameters for a given target.
+For reference, we assemble the parameters definitions and a table summarizing trade off in this section before moving into the details of calculating confidence intervals for rare events in the next section.  Table \ref{tab:summary} summarizes the parameters of the model. Table \ref{tab:tradeoff} summarizes the trade offs in parameters for a given target.
 
 \begin{table}
     \begin{tabular}{m{4cm}| m{7cm}}
@@ -378,23 +379,30 @@ To do \ldots
 
 % first pass at calc, 2013-04-18, BL
 
-Imagine we observe rate of 10 activities per minute and we want to detect a change of activity rate to 20 activitities per minute.  How long does it take to identify a change in the activity rate as a signal with 90\% confidence level?
+Imagine we observe rate of 10 activities per minute and we want to detect a change of activity rate to 20 activitities per minute.  How long does it take to identify a change in the activity rate as a signal with 90\% confidence level? To calculate an answer, we will be using the Signal Sensitivity--Confidence Criteria, \ref{eq:criteriaParam} and Confidence Interval Sizes from Table \ref{tab:conf}
 
 \begin{itemize}
 \item Calculating $T_{l}$
-\item Signal Sensitvity $\Delta r = \frac{20-10}{min} = \frac{10}{min}$
-\item Signal criteria factor $\eta=2$
+\item Signal criteria factor $\eta=3$ -- In this case we choose a criteria that reflects our wish to see fewer false positives.
+\item Signal Sensitvity $\frac{\eta \Delta r}{\bar{r}} = \frac{20-10}{min} \frac{1 min}{10 activities}= 100\%$
+\item Confidence Interval Size at $\bar{r} =10$ is $11.54$.
 \end{itemize}
 
-The time $T_{l}$ that it takes to observe this signal $\Delta r$ depends the total number of activities $N_t$ that we must observe to have a credible estimate of the activity rate. Because activities are infrequent, we will look up the confidence interval for small numbers of activities this up in Table \ref{tab:conf}.  As $N_t$ increases, the $90\%$ confidence Interval Size narrows around the average rate $\delta r$ decreases.  We need to find the value for $N$ at which point $\delta r$ has decreased enough to allow us to see our signal $\Delta r = \frac{10}{min}$.  
+It is clear that we cannot detect a change in activity rate of 10 activities/minute in by measuring a rate near 10 for only 1 min, i.e. our criteria is not fulfilled:
+\begin{equation}
+    \label{eq:ex2:notmet}
+    \frac{\eta \delta r}{\bar{r}} = \frac{3(11.54)}{10} \approx 346\% \not\le 100\% 
+\end{equation}
 
-From Table \ref{tab:conf} we must have $N\geq8$ causing $I > 10\eta$ in order to observe our signal.  Notice that $N_t=7$ is the point after which we could first observe a signal. Therefore, we are able to detect a change of of 10 activities in 2 min.
+The time $T_{l}$ that it takes to observe this signal $\Delta r$ depends the total number of activities $N_t$ that we must observe to have a credible estimate of the activity rate. Because activities are infrequent, we will look up the confidence interval size for small numbers of activities this up in Table \ref{tab:conf}.  As $N_t$ increases, the relative $90\%$ confidence Interval Size narrows around the average rate.  We need to find the value for $N$ at which:
 
+It is clear that we cannot detect a change in activity rate of 10 activities/minute in by measuring a rate near 10 for only 1 min, i.e. our criteria is not fulfilled:
+\begin{equation}
+    \label{eq:ex2:met}
+    \frac{\eta \delta r}{\bar{r}} = 3 \text{ Relative Interval Size} = 100\% 
+\end{equation}
 
- Thus, we say that $T_{l}>T_{N_t}$ defines the time that it takes to observe a signal, which means that signal latency is greater than the amount of time that it takes to collect $N_t$ activities.  Takes 2 periods to get the calculation> have to calculate the rate in the first then the second and compare.
-
-We can decrease $T_{l}$ in several ways.  First, we could try improving the rate at which we achieve $N_t$ by  increasing our PowerTrack sampling.  Otherwise, we could decrease $T_{l}$ as we narrow $I$ through a lower confidence level $(1-\alpha)$.  The lower confidence level tightens $I$ around smaller $N$ allowing the potential signal to become clearer faster, but this goal is accomplished at the cost of decreased confidence.  Another basic option is to simply choose a smaller (larger?) signal size such as $\Delta r = \frac{5}{T}$ from our previous example.  All of these strategies would decrease $T_{l}$.
-
+You can look up the required Relative Interval Size in Table \ref{tab:conf}, $100\%/3 = 33\%$ to see that we need to observe 100 events on average to reach our criteria. Therefore, $T_l = 10$ min.
 
 %How long does it take to identify a change in the activity rate as a signal?
 %
