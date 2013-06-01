@@ -182,7 +182,7 @@ uncertainty the change in rate must be.
 
 \begin{equation}
     \label{eq:criteriaParam}
-    \frac{\eta \delta r}{\bar{r}_{max}} << \frac{\Delta r}{\bar{r}_{max}}
+    \frac{\delta r}{\bar{r}_{max}} = \frac{\eta \Delta r}{\bar{r}_{max}}
 \end{equation}
 where $\eta \ge 1$.
 
@@ -347,7 +347,7 @@ Decrease Signal Latency      & (decrease $T_l$)  \\
                                  & decrease confidence factor ($\alpha$) \\
                                  & increase activity rate ($r$) by broadening filter or increase PowerTrack sampling \\
 \hline
-Decrease Signal Uncertainty & (decrease $\delta r$ or increase $\eta$) \\
+Decrease Signal Uncertainty & (decrease $\delta r$ or decrease $\eta$) \\ %decreasing eta will restrict the signal  
                           	 & increase $T$ (increase number of buckets ($k$)  \\
                                  & or increase bucket size ($\Delta t$) )  \\
                                  & increase activity counts (increase $N$, $r$) by broadening filter or increase PowerTrack sampling \\
@@ -366,37 +366,43 @@ We present some example calculations to make this concrete and illustrate the us
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Estimate the Optimal Powertrack Sampling Operator Value} 
 
-To do \ldots
+The Sampling Operator, $S$, is the percent sample size extracted from the firehose.  Selecting $S$ is a process that starts at $S =100\%$.  Carefully monitoring the number of activities, $N$, that are filtered through the rules, we get an estimate for $r$ called $\bar{r}$.  Careful monitoring requires a specific report of $\bar{r}$ over small time periods $T$.
+
+Using 100\% of the firehose for one minute, imagine that we observe $\bar{r}=10$ activities.  Further, say that we want to detect a change in activity rate of 20 activitities per minute using $\eta = \frac{1}{3}$.  What sample size should we extract from the firehose?  
+
+The answer to this question depends latency.  We must observe at least 10 minutes of activities to detect our desired signal (see Estimate Signal Latency for calculation).  Is this latency unnecessarily fast?  The comfort level with latency time is user defined.  
+
+Say instead, we are comfortable with a latency of 2 days.  Given that we expect $\frac{10}{1}$ activites per minute or $14,400$ activities per day, we need to meet our Signal Sensitvity ($\frac{\delta r}{\bar{r}} = \text{ Relative Interval Size} = \frac{1}{3}\frac{(20-10)}{min} \frac{1 min}{10 activities}= 33\%$) over this 2 day period.  Table \ref{tab:conf} requires 100 activies for a $\text{ Relative Interval Size}$ of $33\%$ over this 2 day period.  Hence, instead of using $100\%$ of the firehose, we could use $S = \frac{100}{28,000} << 1\%$.              \ldots
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Estimate Signal Latency} 
 
 % first pass at calc, 2013-04-18, BL
 
-Imagine we observe rate of 10 activities per minute and we want to detect a change of activity rate to 20 activitities per minute.  How long does it take to identify a change in the activity rate as a signal with 90\% confidence level? To calculate an answer, we will be using the Signal Sensitivity--Confidence Criteria, \ref{eq:criteriaParam} and Confidence Interval Sizes from Table \ref{tab:conf}
+Imagine we observe rate of 10 activities per minute and we want to detect a change in activity rate of 20 activitities per minute.  How long does it take to identify a change in the activity rate as a signal with 90\% confidence level? To calculate an answer, we will be using the Signal Sensitivity--Confidence Criteria, \ref{eq:criteriaParam} and Confidence Interval Sizes from Table \ref{tab:conf}
 
 \begin{itemize}
 \item Calculating $T_{l}$
-\item Signal criteria factor $\eta=3$ -- In this case we choose a criteria that reflects our wish to see fewer false positives.
-\item Signal Sensitvity $\frac{\eta \Delta r}{\bar{r}} = \frac{20-10}{min} \frac{1 min}{10 activities}= 100\%$
-\item Confidence Interval Size at $\bar{r} =10$ is $11.54$.
+\item Signal criteria factor $\eta=\frac{1}{3}$ -- In this case we choose a criteria that reflects our wish to see fewer false positives.
+\item Signal Sensitvity $\frac{\eta \Delta r}{\bar{r}} = \frac{1}{3}\frac{(20-10)}{min} \frac{1 min}{10 activities}= 33\%$
+\item Confidence Interval Size at $N =10$ is $11.54$. %Confidence intervals around $\r_bar$ only depend on N. 
 \end{itemize}
 
-It is clear that we cannot detect a change in activity rate of 10 activities/minute in by measuring a rate near 10 for only 1 min, i.e. our criteria is not fulfilled:
+It is clear that we cannot detect a change in activity rate of 10 activities/minute by measuring for only 1 min.  Notice that our criteria is not fulfilled:
 \begin{equation}
     \label{eq:ex2:notmet}
-    \frac{\eta \delta r}{\bar{r}} = \frac{3(11.54)}{10} \approx 346\% \not\le 100\% 
+    \frac{\delta r}{\bar{r}} = \frac{(11.54)}{10} \approx 115.4\% \not\le 33\% 
 \end{equation}
 
-The time $T_{l}$ that it takes to observe this signal $\Delta r$ depends the total number of activities $N_t$ that we must observe to have a credible estimate of the activity rate. Because activities are infrequent, we will look up the confidence interval size for small numbers of activities this up in Table \ref{tab:conf}.  As $N_t$ increases, the relative $90\%$ confidence Interval Size narrows around the average rate.  We need to find the value for $N$ at which:
+The time $T_{l}$ that it takes to observe this signal $\Delta r =20$ with signal criteria factor of $\eta=\frac{1}{3}$ depends on the total number of activities $N_t$ that we must observe to have a credible estimate of the activity rate. Because activities are infrequent, we will look up the confidence interval size, synomous to $\delta r$, for small numbers of activities in Table \ref{tab:conf}.  As $N_t$ increases, the relative $90\%$ confidence interval size narrows around the average rate, which can be seen through the decreasing realive interval value in Table \ref{tab:conf}.  We need to find the value for $N_t$.
 
-It is clear that we cannot detect a change in activity rate of 10 activities/minute in by measuring a rate near 10 for only 1 min, i.e. our criteria is not fulfilled:
+We can only detect a signal $\Delta r$ when our signal criteria is fulfilled:
 \begin{equation}
     \label{eq:ex2:met}
-    \frac{\eta \delta r}{\bar{r}} = 3 \text{ Relative Interval Size} = 100\% 
+    \frac{\delta r}{\bar{r}} = \text{ Relative Interval Size} = 33\% =  \frac{\eta \Delta r}{\bar{r}}
 \end{equation}
 
-You can look up the required Relative Interval Size in Table \ref{tab:conf}, $100\%/3 = 33\%$ to see that we need to observe 100 events on average to reach our criteria. Therefore, $T_l = 10$ min. That is, we must observe 10 min of activities at the new level to have detected our desired signal.
+You can look up the required Relative Interval Size in Table $\ref{tab:conf}, 100\%/3 = 33\%$ to see that we need to observe at least 100 events on average to reach our criteria. Therefore, $T_l = 10 minutes$ because we will have observed 100 activities in 10 minutes given $r_bar = \frac{10 activities}{1 min}$. That is, we must observe 10 minutes of activities to detect our desired signal.
 
 %How long does it take to identify a change in the activity rate as a signal?
 %
@@ -435,8 +441,8 @@ and total time $T$.
 %\end{equation}
 
 
-Let us assume we have decided to classify as significant a signal with $\eta$ = 10, or 
-$\Delta r > 10\delta r$. Furthermore, we have chosen a 90\% confidence interval 
+Let us assume we have decided to classify as significant a signal with $\eta = \frac{1}{10}$, or 
+$\delta r = \frac{1}{10}\Delta r$. Furthermore, we have chosen a 90\% confidence interval 
 ($\alpha = 0.1$), and observed $N$=10,000 activities over a period of $T$=1 minute 
 (60 seconds) for an estimated activity rate of $\bar r = 167~\si{\per\second}$. We next use 
 Equation~\ref{eq:chisqconf} to calculate the interval of activities for our 
@@ -445,7 +451,7 @@ minimum significant activity rate $\delta r = 5~\si{\per\second}$. Recall, howev
 that we have also specified a criteria factor $\eta = 10$. Therefore, in this example, 
 in order to classify the change in rate as significant, we must observe a change at the 
 level of 
-$\Delta r = \eta \delta r = 10 (5~\si{\per\second}) = 50~\si{\per\second}$. 
+$\Delta r =\frac{1}{\eta} \delta r = 10 (5~\si{\per\second}) = 50~\si{\per\second}$. 
 For an increasing activity rate, this corresponds to a total activity rate of 
 $167~\si{\per\second} + 50~\si{\per\second} = 217~\si{\per\second}$. For a decreasing 
 rate, $117~\si{\per\second}$.
