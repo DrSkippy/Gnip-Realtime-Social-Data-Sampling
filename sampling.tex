@@ -89,7 +89,7 @@ we count.
 	\node[align=center, below] at (3.5,-0.5){confidence\\($\delta_{rate,N}$)};
 	\end{tikzpicture}
 \end{center}
-\caption{The number of events is a product of the rate and time. Signal is
+\caption{The number of activities is a product of the rate and time. Signal is
 the change in event rate we want to detect. Confidence characterizes the uncertainty
 in our estimate of rate. These parameters are not independent: choose any two and
 calculate the third. }
@@ -123,7 +123,7 @@ There are a handful of related questions that may come up regarding sampling and
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Motivating Questions} 
 
-Common questions regartind rate, signal and confidence level:
+Common questions regardind rate, signal and confidence level:
 
 \begin{itemize}
 	\item The activity rate has doubled from five counts to ten counts between two of my buckets. Is this a significant change? 
@@ -171,7 +171,7 @@ Gnip's premium streams including Tumblr, Twitter, Wordpress and Disqus. Some key
 	\item Sample is deterministic and returns the same activites for near-rule matches.  For example, this means
 	that you will get the same tweets for matches to the ``super bowl'' portion of the rules ``super bowl sample:12'' 
 	and ``(super bowl OR superbowl) sample:12''
-	\item Sampling is progressively inclusive (i.e. the 2\% stream includes the activities from the 1\% stream plus an 
+	\item Sampling is progressively inclusive (i.e. a 2\% stream (e.g. ``sample:2'') includes the exact activities from the 1\% stream plus an 
 	additional 1\%,  and so on)
 	\item Activities are first selected from the firehose to reach the desired sampling rate and then filtered by keywords 
 \end{enumerate}
@@ -204,7 +204,7 @@ we will define signal in terms of the activity rate.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Activity Rate} 
 
-The activity rate is calculated by,
+The average activity rate is calculated by,
 
 \begin{equation}
     \label{eq:rateEst}
@@ -235,6 +235,10 @@ about the rate estimate?
 
 The details of calculating the confidence level can be found in the next section.  First, we explore the connection between
 uncertainty in the rate estimate and the size of the signal we can detect.
+
+%
+% Add shaded version of fig 1 to show what we are working on now?
+%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Signal Sensitivity}
@@ -424,22 +428,22 @@ summarizes the parameters of the model. Table~\ref{tab:tradeoff} summarizes the 
 a given target.
 
 \begin{table} [!h]
-    \begin{tabular}{m{4cm}| m{7cm}}
+    \begin{tabular}{p{3.5cm}| p{1.5cm}|p{5.65cm}}
      \hline
-Parameter  & Definition \\
+Parameter  & Symbol & Definition \\
 \hline	
-$N$	& Number of activities in time $T$\\
-$T$	& Duration of observation\\
-$r$	& Activity rate \\
-$\bar{r} = N/T$ & Estimate of average activity rate \\
-$\delta r$	& Uncertainty of rate estimate \\
-$\alpha$	& Confidence\\
-$\Delta r$	& Signal sensitivity: change in activity rate \\
-$T_l$	& Signal latency, time to detect $\Delta r$  \\
-$\eta$	& Rate signal criteria factor \\
-$\Delta t$	& Bucket size (for bucketed data where $\Delta t <T$) \\
-$k$	& Duration in number of  buckets ($k=T/\Delta t$) \\
-$S$	& Powertrack sampling (e.g. ``sample:$S$'') \\
+Activity count & $N$ & Number of activities in time $T$\\
+Sample time & $T$	& Duration of observation\\
+Activity rate & $r$	& Number of activities per time \\
+Ave. activity rate & $\bar{r} = N/T$ & Our estimate of average activity rate \\
+Rate variability & $\delta r$	& Uncertainty of rate estimate \\
+Confidence parameter & $\alpha$ & Confidence level is $1-\alpha$\\
+Signal sensitivity & $\Delta r$ & Change in activity rate \\
+Signal latency & $T_l$ & Time required to detect $\Delta r$  \\
+Signal confidence & $\eta$	& Rate signal criteria factor \\
+Bucket size & $\Delta t$ & Predetermined time for estimating rate \\
+Number of buckets & $k$ & Duration in number of  buckets ($k=T/\Delta t$) \\
+Sampling rate & $S$	& Powertrack sampling operator (e.g. ``sample:$S$'') \\
 \hline
 \end{tabular}
 \caption{Summary of model parameters.}
@@ -447,7 +451,7 @@ $S$	& Powertrack sampling (e.g. ``sample:$S$'') \\
 \end{table}
 
 \begin{table}[!h]
-    \begin{tabular}{ m{4cm}| m{7cm}}
+    \begin{tabular}{ p{4cm}| m{7cm}}
      \hline
 Goal  & Possible Actions \\
 \hline
