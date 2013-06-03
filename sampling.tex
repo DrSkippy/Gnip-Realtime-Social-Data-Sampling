@@ -5,6 +5,8 @@
 \usepackage[group-separator={,}]{siunitx}
 \usepackage{authblk}	% prettier multiple authors
 
+\usepackage{tikz}
+
 \title{Real Time Social Data Sampling }
 \author[]{Scott Hendrickson}
 \author[]{Brian Lehman}
@@ -14,88 +16,187 @@
 \begin{document}
 \maketitle
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
 We often wish to calculate social activity rates to identify signals of emerging topics or stories.
-And we want to what we can detect and understand the certainty in our estimates.  Ultimately, we want to design for a given level of certainty and signal sensitivity.
+We want to know what we can detect and understand the certainty of our estimates. This means
+we need to calculate the relationship between activity counts, signal sensitivity and confidence. This
+is illustrated in Figure~\ref{fig:tradeoff}. The event rate is the number of activities per time,
+the signal is the change in rate, and confidence comes from the statistics of the activities and
+sampling operators. Time enters the calculation because the longer we count, the more activities
+we count.
 
-This means we need to calculate the relationship between activity counts, observation time, signal sensitivity and confidence. This is illustrated in Figure~\ref{fig:tradeoff}. The event rate is the number of activities per time, the signal is the change in rate, and confidence comes from the statistics of the activities and sampling operators.
+%%%%%
+% simplest figure
+%
+%\begin{figure}[h]
+%\begin{center}
+%\begin{tikzpicture}
+%\draw (0,0) node[anchor=north]{activities}-- (1.5,2.598)node[anchor=south]{signal} -- (3,0)node[anchor=north]{confidence}-- (0,0);
+%\end{tikzpicture}
+%\end{center}
+%\caption{The number of events is a product of the rate and time. Signal is
+%the change in event rate we want to detect. Confidence characterizes the uncertainty
+%in our estimate of rate. These parameters are not independent: choose any two and
+%calculate the third. }
+%\label{fig:tradeoff}
+%\end{figure}
+%
+%
+%%%%%
 
 %%%%%
 % figure
 %
 \begin{figure}[h]
-    	%\centering
-	\begin{center}
-		\includegraphics[width=1.75in]{./imgs/tradeoff.jpg}
-	\end{center}
-	\caption{The number of events is a product of the rate and time. Signal is the change in event rate we want to detect.  Confidence is the way to characterize the uncertainty in our estimate of rate. These parameters are not independent: choose any two and calculate the third. }
-    	\label{fig:tradeoff}
+\begin{center}
+	%%%%%
+	%
+	% http://cremeronline.com/LaTeX/minimaltikz.pdf
+	%
+	%%%%%
+	% Python generate arrows
+	%	import math
+	%	a=.5*math.sin(2.*math.pi/6)
+	%	b=.5*math.cos(2.*math.pi/6)
+	%	h=3.*math.sin(2.*math.pi/6)
+	%	a1 = (b,a)
+	%	a2 = (0.5,0)
+	%	b1 = (1.5 - b, h - a)
+	%	b2 = (1.5 + b, h - a)
+	%	c1 = (3-b,a)
+	%	c2 = (3-0.5,0)
+	%	print "\draw [thick, <->]",a1,"--",b1,";"
+	%	print "\draw [thick, <->]",b2,"--",c1,";"
+	%	print "\draw [thick, <->]",c2,"--",a2,";"
+	%%%%% 
+	\begin{tikzpicture}[scale=1.1]]
+	% arrows
+	\draw [thick, <->] (0.25000000000000006, 0.4330127018922193) -- (1.25, 2.165063509461097) ;
+	\draw [thick, <->] (1.75, 2.165063509461097) -- (2.75, 0.4330127018922193) ;
+	\draw [thick, <->] (2.5, 0) -- (0.5, 0) ;
+	% circles
+	\draw [orange, ultra thick] (0,0) circle [radius=0.5];
+	\draw [yellow, ultra thick] (1.5,2.598) circle [radius=0.5];
+	\draw [green, ultra thick] (3,0) circle [radius=0.5];
+	% labels
+	\node[align=center, below] at (-0.5,-0.5){activities\\($N=rate \times time$)};
+	\node[align=center, above] at (1.5,3.098){signal\\($\Delta r=rate_{final}-rate_{init}$)};
+	\node[align=center, below] at (3.5,-0.5){confidence\\($\delta_{rate,N}$)};
+	\end{tikzpicture}
+\end{center}
+\caption{The number of events is a product of the rate and time. Signal is
+the change in event rate we want to detect. Confidence characterizes the uncertainty
+in our estimate of rate. These parameters are not independent: choose any two and
+calculate the third. }
+\label{fig:tradeoff}
 \end{figure}
 %
 %
 %%%%%
 
-For many topics, social media streams contain data with significant enough volume and frequency to create reliable, high-resolution signals in the time series in short observation times.  But for the less common topics, the activities (e.g. blog posts on curling) are less frequent and we need to take care in identifying the observation time, signal sensitivity and confidence level. These three quantities are related; typically, we can choose two and the third will be defined for the stream we are watching.
+%%%%%
+% hand drawn figure
+%
+%\begin{figure}[h]
+%    	%\centering
+%	\begin{center}
+%		\includegraphics[width=1.75in]{./imgs/tradeoff.jpg}
+%	\end{center}
+%\caption{The number of events is a product of the rate and time. Signal is
+%the change in event rate we want to detect. Confidence characterizes the uncertainty
+%in our estimate of rate. These parameters are not independent: choose any two and
+%calculate the third. }
+%\label{fig:tradeoff}
+%
+%
+%%%%%
 
-There are a handful of related questions you that may come up around sampling and signals.  In the next section, we list some of these questions. In the following section, we will look at filtering and sample in a little more detail.  The middle of this white paper builds up the calculation method required to answer these questions. Finally, we provide some example calculations.
+For many topics, social media streams contain data with sufficient frequency to create reliable, high-resolution signals in short observation times.  But for the less common topics, the activities (e.g. blog posts or tweets) are less frequent and we need to take care in identifying the observation time, signal sensitivity and confidence level. These three quantities are related; typically, we can choose two and calculate the third.
+
+There are a handful of related questions that may come up regarding sampling and signals.  In the next section, we list some of these questions to explore the meaning of the relationships outlined above. After that, we will look at filtering and sampling in a little more detail.  The middle of this white paper builds up the calculation method required to answer these questions. Finally, in the last section, we provide example calculations.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Motivating Questions} 
 
-Common questions around rate estimates, signal and confidence level:
+Common questions regartind rate, signal and confidence level:
 
 \begin{itemize}
-\item I plan to bucket the data in order to estimate activity rate, how big (i.e. what duration) should the buckets be? 
-\item How many activities should I target to collect in each bucket in order to be have a 95\% confidence that my rate estimate is accurate? 
-\item The activity rate has doubled from five counts to ten counts between two of my buckets. Is this a significant change? Or is this expected variation due to low-frequency events?
-\item I want to minimize the total number activities I consume, what sampling factor should I use if I want to detect changes of 2x in activity rate in 1-hour?
-\item How many buckets do I aggregate to optimize the trade-off between signal sensitivity and signal latency?
-\item How do I describe the trade-off between signal latency (how long I have to wait) and rate uncertainty (how confidently I can estimate activity rate)?
-\item How do I define confidence levels on rate estimates for a social activity time series with only 20 events per day?
+	\item The activity rate has doubled from five counts to ten counts between two of my buckets. Is this a significant change? 
+	Or is this expected variation due to low-frequency events?
+	\item I want to minimize the total number activities I consume, what sampling factor should I use if I want to detect
+	changes of 2x in activity rate in 1-hour?
+	\item How long should I observe and count activities to detect a change in signal of 5\%?
+	\item How do I describe the trade-off between signal latency (how long I have to wait) and rate uncertainty (how 
+	confidently I can estimate activity rate)?
+	\item How do I define confidence levels on rate estimates for a social activity time series with only 20 events per day?
+	\item I plan to bucket the data in order to estimate activity rate, how big (i.e. what duration) should the buckets be? 
+	\item How many activities should I target to collect in each bucket in order to be have a 95\% confidence that my 
+	rate estimate is accurate for each bucket? 
 %\item \ldots
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Sample Operators and Order of Filters} 
 
-An additional complexity is that you may also choose to sample a known fraction of the total social activities to control costs or to scale analysis.  
-This effectively decreases the rate of activities. It may be useful to take a detour into sampling before moving the the core 
-of the calculation.  If not, just skip to the next section.
+In order to to control costs or to scale analysis, we may choose to sample a known fraction of the total social activities. This presents an
+additional complexity to the ideas introduced in the introduction. Using a sampling filter effectively decreases the rate of activities. If you
+plan to use a sampling filter, it may be useful to explore sampling before moving the the core of the calculation.  
+If not, please skip to the next section.
 
-There are two approaches to sampling a firehose of social data. Both involve reducing the number of activities in the real time stream to an
-intermediate, manageable size for analysis.
+There are two approaches to sampling a firehose of social data. Both involve reducing the number of activities in the 
+real time stream to a manageable size for analysis.
 
-The first step is to use keyword filtering.  Gnip provides filtering on keywords to select only the portion of the stream that is relevant to the topic you want to analyze. For example, if you are interested in tracking the Super Bowl, you might start with a broad stream defined by the keywords ``superbowl" ``super~bowl" and ``contains:xlvii", the latter being the Roman numeral of the Super Bowl as might be seen in hashtags or short links. This would limit the social data stream to activities related to the Super Bowl.
+The first step is to use keyword filtering.  Gnip provides filtering on keywords to select only the portion of the stream
+that is relevant to the topic you want to analyze. For example, if you are interested in tracking the Super Bowl, you 
+might start with a broad stream defined by the keywords ``superbowl" ``super~bowl" and ``contains:xlvii", the 
+latter being the Roman numeral of the Super Bowl as might be seen in hashtags or short links. This would limit the 
+social data stream to activities related to the Super Bowl.
 
-In the case of a major event like the Super Bowl, the keyword-filtered stream may represent a very large number of activities.  In this case, a second step might be to filter this stream to a known fraction of the total firehose. For example, using Gnip's sampling operator, we can reduce the stream to only fraction, e.g. 12\%, of the activities. The corresponding Powertrack rule would become  ``(super bowl OR superbowl) sample:12''.
+In the case of a major event like the Super Bowl, the keyword-filtered stream may represent a very large number
+of activities.  In this case, a second step might be to filter this stream to a known fraction of the total firehose. For 
+example, using Gnip's sampling operator, we can reduce the stream to only fraction, e.g. 12\%, of the activities. 
+The corresponding Powertrack rule would become  ``(super bowl OR superbowl) sample:12''.
 
-It is useful to know how Gnip's sampling algorithms work to inform sampling decisions.  Sampling is available on Gnip's premium streams including Tumblr, Twitter, Wordpress and Disqus. Some key features of Gnip sampling :
+It is useful to know how Gnip's sampling algorithms work to inform sampling decisions.  Sampling is available on
+Gnip's premium streams including Tumblr, Twitter, Wordpress and Disqus. Some key features of Gnip sampling:
 
 \begin{enumerate}
 	\item 1\% resolution
-	\item Effective sampling rate stable (short time resolution)
-	\item Sample is deterministic and returns the same activites for near-rule matches.  For example, this means that you will get the same tweets for matches to the ``super bowl'' portion of the rules ``super bowl sample:12'' and ``(super bowl OR superbowl) sample:12''
-	\item Progressively inclusive (i.e. the 2\% stream includes the activities from the 1\% stream plus an additional 1\%,  and so on)
+	\item Stable sampling rate (short time resolution)
+	\item Sample is deterministic and returns the same activites for near-rule matches.  For example, this means
+	that you will get the same tweets for matches to the ``super bowl'' portion of the rules ``super bowl sample:12'' 
+	and ``(super bowl OR superbowl) sample:12''
+	\item Sampling is progressively inclusive (i.e. the 2\% stream includes the activities from the 1\% stream plus an 
+	additional 1\%,  and so on)
 	\item Activities are first selected from the firehose to reach the desired sampling rate and then filtered by keywords 
 \end{enumerate}
 
-What happens when we look at the combination of filtering with sampling?  Continuing with our Super Bowl example, assume our term filtering rules return $y=5\%$ of the stream. Assume further that we sample $x=12\%$ sample of the firehose activities and thee total activities for the day are $N_f=500$M.
-Filtering and sampling will leave us with approximately,
+What happens when we look at the combination of filtering with sampling?  Continuing with our Super Bowl example, 
+assume our term filtering rules return $y=5\%$ of the stream. Assume further that we sample $x=12\%$ sample of 
+the firehose activities and the total activities for the day are $N_f=500$M. Filtering and sampling will leave us with 
+approximately,
 
 \begin{equation}
     \label{eq:sbsample}
-    N_{obs} = x y N_f = 0.12 (0.05) 500 \textrm{M = 3M}
+    N_{observed} = x y N_{firehose}= 0.12 (0.05) 500 \textrm{ M} = 3 \textrm{ M}
 \end{equation}
-observed activities in a day. 
+activities in a day. 
 
-Once you understand this order, it is natural to ask why Gnip does not filter first, then sample. The difference is not in the final outcome, but how long you have to wait for a reliable estimate of rate. If Gnip were to filter on keywords first, followed by sampling, Equation~\ref{eq:sbsample} would also be a reasonable estimate of $N_{obs}$ on the time scale of the sampling calculation. However, this process would require relaxing properties 3 and 4 in the list above. Both attributes are desirable for most social data projects. Doing the sample first, followed by the keyword filter, gives a slightly more complex behavior because it amplifies the effects of statistical variations in the short term.
+Once you understand this order, it is natural to ask why Gnip does not filter first, then sample. The difference is not
+in the final outcome, but how long you have to wait for a reliable estimate of rate. If Gnip were to filter on keywords
+first, Equation~\ref{eq:sbsample} would also be a reasonable estimate of $N_{observed}$ on the time scale of the 
+sampling calculation. However, this process would require relaxing properties 3 and 4 in the list above. Both attributes
+are desirable for most social data projects. Doing the sample first, followed by the keyword filter, gives a slightly
+more complex behavior because it requires us to deal the effects of statistical variations in the short term.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Signal} 
 
-In many situations, the main question is: \emph{``How many events must we observe in order to detect a signal?"} Answering this question requires an understanding of the trade offs between sampling time, activity rates, and signal size.  First, we will define signal in terms of the activity rate.
+In many situations, the main question is: \emph{``How many events must we observe in order to detect a signal?"} Answering
+this question requires an understanding of the trade offs between sampling time, activity rates, and signal size.  First, 
+we will define signal in terms of the activity rate.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Activity Rate} 
@@ -106,16 +207,17 @@ The activity rate is calculated by,
     \label{eq:rateEst}
     \bar{r} = \frac{N}{T}
 \end{equation}
-where $N$ is the number of activities and $T$ the time period over which we count.  Because there will be statistical variations in the number of activities we count in any given time interval, there will be some uncertainty in our estimate of average rate. The more activities we count, the lower the uncertainty in our estimate.
+where $N$ is the number of activities and $T$ the time period over which we count.  Because there will be statistical variations in the number of activities we count in any given time interval, there will be some uncertainty in our estimate of average rate. The more activities we count, the lower the uncertainty in our estimate as shown in Figure~\ref{fig:confidence}.
 
 %%%%%
 % figure
 %
 \begin{figure}[h]
 	\begin{center}
-		\includegraphics[width=4.0in]{./imgs/confidence.jpg}
+		\includegraphics[width=3.8in]{./imgs/fig2.pdf}
 	\end{center}
-	\caption{Uncertainty in the estimated rate of activities goes down as we observe more events. }
+	\caption{Uncertainty in the estimated rate of activities goes down as we observe wait longer for in order to count more activities.  The green line
+represents the rate while the blue lines show the upper and lower 95\% confidence band over time. }
     	\label{fig:confidence}
 \end{figure}
 %
@@ -150,7 +252,8 @@ The associated time scale of the change, $T_l = t_f - t_i$, is the Signal Latenc
 %
 \begin{figure}[h]
     \centering
-    \includegraphics[width=3.5in]{./imgs/signal.jpg}
+    \includegraphics[width=3.5in]{./imgs/fig3a.pdf}
+    \includegraphics[width=3.5in]{./imgs/fig3b.pdf}
         \caption{A signal can be detected when the change in rate is greater than the uncertainty in the rate estimates.}
     \label{fig:signal}
 \end{figure}
