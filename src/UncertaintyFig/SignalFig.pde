@@ -1,25 +1,33 @@
 class figure_sig extends figure_un {
-  
+
   float pre_dy;
   float sig_par = 0.8;
-  
-  figure_sig(String _name, int _n,  float _dy) {
+
+  figure_sig(String _name, int _n, float _dy) {
     super(_name, _n); 
     pre_dy = _dy;
   } 
-  
+
   float sigmoid(float t, float dt, float dr) {
-    // doubles from 1 to 2
+    // increases from 1 to 1 + dr
     return 1. + dr/(1. + exp(sig_par*(dt-t)));
   }
-  
+
+  void annotation(PFont font, int x_axis, int x_width, int y_height) {
+    textFont(font, 24);
+    textAlign(CENTER);
+    fill(0);
+  }
+
   void conf_curve(int x_origin, int x_pixels, int y_pixels) {
     float x;
     float y;
     float yu;
     float yl;
-    float dt = 7;
-    float dr = 3;
+    // steps in increase
+    float dt = 9;
+    // signal increasees by...
+    float dr = 1.5;
     //
     // settings
     strokeWeight(1);
@@ -36,8 +44,10 @@ class figure_sig extends figure_un {
     float y_last = rate * dy;
     float yu_last = poisson_ubounds(int(rate)) * dy;
     float yl_last = poisson_lbounds(int(rate)) * dy;
-    //stroke(baseline_color);
-    //line(x_origin + x_last, y_size - (x_origin + 1*dy), x_origin + n*dx, y_size - (x_origin + 1*dy));
+    // The final value of the rate
+    stroke(marker_color);
+    //line(x_origin, y_size - (x_origin + int(n*(1. + dr)*dy)), x_origin + dt*dx, y_size - (x_origin + int(n*(1. + dr)*dy)));
+    arrow(x_origin + 50, x_origin + int(n*(1. + dr)*dy), int(x_origin + dt*dx/2), x_origin + int(n*(1. + dr)*dy));
     //stroke(point_color);
     //point(x_origin + x_last, y_size - (x_origin + yu_last));
     //point(x_origin + x_last, y_size - (x_origin + yl_last));
@@ -65,3 +75,4 @@ class figure_sig extends figure_un {
     }
   }
 }
+

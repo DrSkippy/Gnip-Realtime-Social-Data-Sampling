@@ -9,6 +9,10 @@
 
 \usepackage{hyperref}
 
+% see http://texblog.org/2008/05/07/fwd-equal-cell-width-right-and-centre-aligned-content/
+\newcolumntype{x}[1]{%
+>{\centering\hspace{0pt}}p{#1}}%
+
 
 \title{Real Time Social Data Sampling }
 \author[]{Scott Hendrickson}
@@ -149,7 +153,8 @@ plan to use a sampling filter, it may be useful to explore sampling before movin
 If not, please skip to the next section.
 
 There are two approaches to sampling a firehose of social data. Both involve reducing the number of activities in the 
-real time stream to a manageable size for analysis.
+real time stream to a manageable size for analysis. \footnote{Twitter's filtered, rate-limited 1\% streaming API provides a 
+non-deterministic combination that is not suitable for many analytic tasks.  See \cite{Morstatter:2013}.} 
 
 The first step is to use keyword filtering.  Gnip provides filtering on keywords to select only the portion of the stream
 that is relevant to the topic you want to analyze. For example, if you are interested in tracking the Super Bowl, you 
@@ -171,7 +176,8 @@ Gnip's premium streams including Tumblr, Twitter, Wordpress and Disqus. Some key
 	\item Sample is deterministic and returns the same activites for near-rule matches.  For example, this means
 	that you will get the same tweets for matches to the ``super bowl'' portion of the rules ``super bowl sample:12'' 
 	and ``(super bowl OR superbowl) sample:12''
-	\item Sampling is progressively inclusive (i.e. a 2\% stream (e.g. ``sample:2'') includes the exact activities from the 1\% stream plus an 
+	\item Sampling is progressively inclusive (i.e. a 2\% stream (e.g. ``sample:2'') includes the exact activities from
+	the 1\% stream plus an 
 	additional 1\%,  and so on)
 	\item Activities are first selected from the firehose to reach the desired sampling rate and then filtered by keywords 
 \end{enumerate}
@@ -219,7 +225,7 @@ The more activities we count, the lower the uncertainty in our estimate as shown
 %
 \begin{figure}[h]
 	\begin{center}
-		\includegraphics[width=3.8in]{./imgs/fig2.pdf}
+		\includegraphics[width=3.5in]{./imgs/fig2.pdf}
 	\end{center}
 	\caption{Uncertainty in the estimated rate of activities goes down as we wait longer in order to count more activities.  The green line
 represents the rate while the blue lines show the upper and lower 95\% confidence band. }
@@ -233,7 +239,7 @@ Below, we will determine how many activities $N$ we need to count to estimate th
 of confidence (e.g. 95\%). Or, inverting this question: given a level of confidence, how wide is the range of uncertainty
 about the rate estimate?
 
-The details of calculating the confidence level can be found in the next section.  First, we explore the connection between
+The details of calculating the confidence level can be found in the next section.  Next, we explore the connection between
 uncertainty in the rate estimate and the size of the signal we can detect.
 
 %
@@ -244,7 +250,7 @@ uncertainty in the rate estimate and the size of the signal we can detect.
 \subsection{Signal Sensitivity}
 
 When activity rates are high, rate estimates will be more certain; when low, rate estimates will be less certain. High uncertainty
-in the rate estimates may hide the small changes in activity rates we wish to identify.  The variation in activity rate do to the statistics
+in the rate estimates may hide the small changes in activity rates we wish to identify.  The variation in activity rate due to the statistics
 associate with infrequent events (or short observation time) must be smaller than the signal we want to detect. Therefore, we observe
 a valid signal in a time series when the activity rate has changed by more than the rate signal sensitivity, $\Delta r$, defined as,
 
@@ -253,7 +259,8 @@ a valid signal in a time series when the activity rate has changed by more than 
     | r(t_f) - r(t_i) | \geq \Delta r.
 \end{equation}
 
-The associated time scale of the change, $T_l = t_f - t_i$, is the signal latency.  This definition implies that the we must observe activities for a time $T > T_l$ to achieve signal sensitivity $\Delta r$.
+The associated time scale of the change, $T_l = t_f - t_i$, is the signal latency.  This definition implies that we 
+must observe activities for a time, $T > T_l$, to achieve the desired signal sensitivity, $\Delta r$.
 
 %%%%%
 % figure
@@ -313,7 +320,7 @@ A model of counts of rare activities is that the inter-arrival times are exponen
     p_{activity}(t) = r e^{-r t}
 \end{equation}
 
-This assumption leads to a Poission distribution of activity counts over time.
+This assumption leads to a Poisson distribution of activity counts over time.
 
 The probability of observing $n$ activities in time $t$ when the activity rate is $r$ is given by,
 \begin{equation}
@@ -326,7 +333,7 @@ The expected value is $E[n]=n=rt$. The mean and variance of the Poisson distribu
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Poisson Confidence Intervals} 
 
-We are counting activities in a defined time interval to estimate the activity rate $\bar{r}$. Confidence intervals for the
+We are counting activities in a defined time interval to estimate the activity rate $\bar{r}$. Confidence intervals \cite{Geo2012} for the
 Poisson distribution with confidence level $\text{conf\%} = 100\%(1-\alpha)$ are given by,
 
 \begin{equation}
@@ -336,44 +343,43 @@ Poisson distribution with confidence level $\text{conf\%} = 100\%(1-\alpha)$ are
 where $\chi^2$ is the inverse cumulative distribution function, $CDF^{-1}(p; n)$, of the $\chi^2$ distribution.\footnote{A useful approximation to the exact interval is given by  $[ n(1 - \frac{1}{9n} - \frac{z_{\alpha}}{3\sqrt{n}})^3 , (n+1)(1- \frac{1}{9(n+1)} + \frac{z_{\alpha}}{3\sqrt{n+1}})^3]$. }
 Note that with this definition of $\alpha$, a confidence interval of 90\% corresponds to $\alpha=0.1$.
 
-Confidence interval sizes for confidence levels of 90\% are shown in \ref{tab:conf}
+Confidence interval sizes for confidence levels of 90\% are shown in Table \ref{tab:conf}
 
-\begin{table}
-    \begin{tabular}{r|l|r|r}
+\begin{table}\centering
+    \begin{tabular}{r|x{3.5cm}|r|r}
      \hline
-N & Interval Bounds & Interval Size & Relative Interval\\ 
+N & Interval Bounds & Interval Size ($\delta n$) & Relative Interval\\ 
 \hline 
-1 &  [ 0.0513, 4.744 ] & 4.693 & 4.693\\ 
-2 &  [ 0.3554, 6.296 ] & 5.940 & 2.970\\ 
-3 &  [ 0.8177, 7.754 ] & 6.936 & 2.312\\ 
-4 &  [ 1.366, 9.154 ] & 7.787 & 1.947\\ 
-5 &  [ 1.970, 10.51 ] & 8.543 & 1.709\\ 
-6 &  [ 2.613, 11.84 ] & 9.229 & 1.538\\ 
-7 &  [ 3.285, 13.15 ] & 9.863 & 1.409\\ 
-8 &  [ 3.981, 14.43 ] & 10.45 & 1.307\\ 
-9 &  [ 4.695, 15.71 ] & 11.01 & 1.223\\ 
-10 &  [ 5.426, 16.96 ] & 11.54 & 1.154\\ 
-20 &  [ 13.25, 29.06 ] & 15.81 & 0.7904\\ 
-30 & [ 21.59, 40.69 ] & 19.10 & 0.6366\\ 
-40 & [ 30.20, 52.07 ] & 21.87 & 0.5468\\ 
-50 & [ 38.96, 63.29 ] & 24.32 & 0.4864\\ 
-60 & [ 47.85, 74.39 ] & 26.54 & 0.4423\\ 
-70 & [ 56.83, 85.40 ] & 28.57 & 0.4082\\ 
-80 & [ 65.88, 96.35 ] & 30.47 & 0.3809\\ 
-90 & [ 74.98, 107.2 ] & 32.25 & 0.3584\\ 
-100 & [ 84.14, 118.1 ] & 33.94 & 0.3394\\ 
-200 & [ 177.3, 224.9 ] & 47.55 & 0.2378\\ 
-300 & [ 272.1, 330.1 ] & 58.00 & 0.1933\\ 
-400 & [ 367.7, 434.5 ] & 66.82 & 0.1670\\ 
-500 & [ 463.8, 538.4 ] & 74.58 & 0.1492\\ 
-750 & [ 705.5, 796.6 ] & 91.11 & 0.1215\\ 
-1000 & [ 948.6,  1054. ] & 105.0 & 0.1050\\ 
+1 &   0.0513, 4.744  & 4.693 & 4.693\tabularnewline 
+2 &   0.3554, 6.296  & 5.940 & 2.970\tabularnewline 
+3 &   0.8177, 7.754  & 6.936 & 2.312\tabularnewline 
+4 &   1.366, 9.154  & 7.787 & 1.947\tabularnewline 
+5 &   1.970, 10.51  & 8.543 & 1.709\tabularnewline 
+6 &   2.613, 11.84  & 9.229 & 1.538\tabularnewline 
+7 &   3.285, 13.15  & 9.863 & 1.409\tabularnewline 
+8 &   3.981, 14.43  & 10.45 & 1.307\tabularnewline 
+9 &   4.695, 15.71  & 11.01 & 1.223\tabularnewline 
+10 &   5.426, 16.96  & 11.54 & 1.154\tabularnewline 
+20 &   13.25, 29.06  & 15.81 & 0.7904\tabularnewline 
+30 &  21.59, 40.69  & 19.10 & 0.6366\tabularnewline 
+40 &  30.20, 52.07  & 21.87 & 0.5468\tabularnewline 
+50 &  38.96, 63.29  & 24.32 & 0.4864\tabularnewline 
+60 &  47.85, 74.39  & 26.54 & 0.4423\tabularnewline 
+70 &  56.83, 85.40  & 28.57 & 0.4082\tabularnewline 
+80 &  65.88, 96.35  & 30.47 & 0.3809\tabularnewline 
+90 &  74.98, 107.2  & 32.25 & 0.3584\tabularnewline 
+100 &  84.14, 118.1  & 33.94 & 0.3394\tabularnewline 
+200 &  177.3, 224.9  & 47.55 & 0.2378\tabularnewline 
+300 &  272.1, 330.1  & 58.00 & 0.1933\tabularnewline 
+400 &  367.7, 434.5  & 66.82 & 0.1670\tabularnewline 
+500 &  463.8, 538.4  & 74.58 & 0.1492\tabularnewline 
+750 &  705.5, 796.6  & 91.11 & 0.1215\tabularnewline 
+1000 &  948.6,  1054.  & 105.0 & 0.1050\tabularnewline 
 \end{tabular}
-\caption{Confidence intervals given the number of events counted $N$ in unit time $T$.  Rate confidence 
-range is $\delta N/T$. Note that the relative uncertainty goes down while the absolute size of the interval increases.}
+\caption{Confidence intervals given the number of events counted $N$ in unit time $T$.  Rate interval 
+size is $\delta r = \delta N/T$. Note that the relative uncertainty goes down while the absolute size of the interval increases.}
 \label{tab:conf}
 \end{table}
-% \delta N (table caption) should be defined somewhere.
 
 To determine the parameters satisfying our data collection goals, we find the value of $n$ for which
 the time interval and confidence level match our requirements for signal detection.  That is, we can
@@ -428,21 +434,21 @@ summarizes the parameters of the model. Table~\ref{tab:tradeoff} summarizes the 
 a given target.
 
 \begin{table} [!h]
-    \begin{tabular}{p{3.5cm}| p{1.5cm}|p{5.65cm}}
+    \begin{tabular}{p{3.0cm}| p{1.9cm}|p{5.9cm}}
      \hline
 Parameter  & Symbol & Definition \\
 \hline	
 Activity count & $N$ & Number of activities in time $T$\\
 Sample time & $T$	& Duration of observation\\
-Activity rate & $r$	& Number of activities per time \\
-Ave. activity rate & $\bar{r} = N/T$ & Our estimate of average activity rate \\
+Activity rate & $r$	& Number of activities per time $T$\\
+Avg. activity rate & $\bar{r} = N/T$ & Our estimate of average activity rate \\
 Rate variability & $\delta r$	& Uncertainty of rate estimate \\
-Confidence parameter & $\alpha$ & Confidence level is $1-\alpha$\\
-Signal sensitivity & $\Delta r$ & Change in activity rate \\
+Confidence & $\alpha$ & Confidence level is $1-\alpha$\\
+Signal sensitivity & $\Delta r=r_{f}-r_{i}$ & Detectable change in activity rate \\
 Signal latency & $T_l$ & Time required to detect $\Delta r$  \\
-Signal confidence & $\eta$	& Rate signal criteria factor \\
-Bucket size & $\Delta t$ & Predetermined time for estimating rate \\
-Number of buckets & $k$ & Duration in number of  buckets ($k=T/\Delta t$) \\
+Signal confidence & $\eta$ & Rate signal criteria multiplier factor (i.e. $\eta = 3$ means relative signal is $3 \times$ random variations in sample) \\
+Bucket & $\Delta t$ & Predetermined time scale for estimating rate (probably already determined in your system)\\
+Number of buckets & $k=T/\Delta t$ & Duration expressed in number of  buckets \\
 Sampling rate & $S$	& Powertrack sampling operator (e.g. ``sample:$S$'') \\
 \hline
 \end{tabular}
@@ -451,28 +457,26 @@ Sampling rate & $S$	& Powertrack sampling operator (e.g. ``sample:$S$'') \\
 \end{table}
 
 \begin{table}[!h]
-    \begin{tabular}{ p{4cm}| m{7cm}}
+    \begin{tabular}{ p{3.0cm}| p{5.2cm} | p{2.6cm}}
      \hline
-Goal  & Possible Actions \\
+Goal  & Possible Actions & Example\\
 \hline
-Minimize activities  & (i.e. decrease $N$)  \\
-                                  & increase $\Delta r$ (decrease signal sensitivity)  \\
-                                  & decrease confidence (E.g. from 95\% to 90\% )  \\
+Minimize activities (i.e. decrease $N$)  & increase $\Delta r$ (decrease signal sensitivity); decrease 
+	confidence (E.g. from 95\% to 90\% ); increase $T_l$ (wait longer for the signal)  & See example 
+	in Section \ref{ex:1} that illustrates long signal latency\\
 \hline	
-Increase signal sensitivity   & (i.e. decrease $\Delta r$)  \\
-                                  & increase $T$ (increase number of buckets ($k$)  \\
-                                  & or increase bucket size ($\Delta t$) )  \\
-                                  & increase activity rate ($r$) by broadening filter or increase Powertrack sampling \\
+Increase signal sensitivity (i.e. decrease $\Delta r$) & increase $T$ (increase number of buckets ($k$); 
+	increase bucket size ($\Delta t$) ); increase activity rate ($r$) by broadening filter or increase 
+	Powertrack sampling  & See example in Section \ref{ex:3} that illustrates sensitivity with high rate\\
 \hline
-Decrease signal latency      & (i.e. decrease $T_l$)  \\
-                                 & decrease signal sensitivity $\Delta r$  \\
-                                 & decrease confidence factor ($\alpha$) \\
-                                 & increase activity rate ($r$) by broadening filter or increase Powertrack sampling \\
+Decrease signal latency  (i.e. decrease $T_l$)   & decrease signal sensitivity $\Delta r$;
+	decrease confidence factor ($\alpha$); increase activity rate ($r$) by broadening filter 
+	or increase Powertrack sampling  & See example in Section \ref{ex:2} that illustrates long signal latency\\
 \hline
-Decrease signal uncertainty & (i.e. decrease $\eta$) \\ %decreasing eta will restrict the signal  
-                          	 & increase $T$ (increase number of buckets ($k$)  \\
-                                 & or increase bucket size ($\Delta t$) )  \\
-                                 & increase activity counts (increase $N$, $r$) by broadening filter or increase Powertrack sampling \\
+Decrease signal uncertainty   (decrease $\eta$)  & increase $T$ (increase number of buckets ($k$); or 
+	increase bucket size ($\Delta t$) ); increase activity counts (increase $N$, $r$) by broadening 
+	filter; increase Powertrack sampling & See example in Section \ref{ex:2} that illustrates a calculation
+	for small $\eta \le 1$\\
 \hline
 \end{tabular}
 \caption{Summary of model trade offs.}
@@ -487,8 +491,9 @@ Below are example calculations to make these ideas concrete and illustrate the u
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Estimate the Optimal Powertrack Sampling Operator Value} 
+\label{ex:1}
 
-The Sampling Operator, $S$, is the percent sample size extracted from the firehose.  Selecting $S$ is a process 
+The sampling operator, $S$, is the percent sample size extracted from the firehose.  Selecting $S$ is a process 
 that often starts at $S =100\%$.  By carefully monitoring the number of activities, $N$, that are filtered through
 the rules, we get an estimate for $\bar{r}$.
 
@@ -497,19 +502,19 @@ we want to detect a change in activity rate of 20 activities per minute using $\
 size should we extract from the firehose?  
 
 Imagine that for this problem, we are comfortable with a signal latency of 2 days--i.e. our system needs to 
-react to signals in about 2 days.  Given that we expect $10$ activites per minute or $14,400$ activities per day, 
+react to signals in about 2 days.  Given that we expect $10$ activities per minute or $14400$ activities per day, 
 we need to meet our signal sensitivity criteria,
 
 \begin{equation}
 \label{eq:ex1:criteria}
-\frac{\delta r}{\bar{r}} = \text{ Relative Interval Size} = \frac{1}{3}\frac{(20-10)}{min} \frac{1 min}{10 activities}= 33\% 
+\frac{\delta r}{\bar{r}} = \text{ Relative Interval Size} = \frac{1}{3}\frac{(20-10)}{\text{min}} \frac{1 \text{ min}}{10 \text{ activities}}= 33\% 
 \end{equation}
 over this 2-day period.  Table \ref{tab:conf} requires 100 activities for a $\text{ Relative Interval Size}$ of $33\%$. Hence, 
 instead of using $100\%$ of the firehose, we could use $S = \frac{100}{28,000} << 1\%$.
    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Estimate Signal Latency} 
-
+\label{ex:2}
 % first pass at calc, 2013-04-18, BL
 
 Imagine we observe rate of 10 activities per minute and we want to detect a change in activity rate of 20 activities
@@ -534,7 +539,7 @@ The time $T_{l}$ that it takes to observe this signal $\Delta r =20$ with signal
 on the total number of activities $N_t$ that we must observe to have a credible estimate of the activity rate. Because activities 
 are infrequent, we will look up the confidence interval size, synonymous to $\delta r$, for small numbers of activities 
 in Table \ref{tab:conf}.  As $N_t$ increases, the relative $90\%$ confidence interval size narrows around the 
-average rate, which can be seen through the decreasing realive interval value in Table \ref{tab:conf}.  We need to 
+average rate, which can be seen through the decreasing relative interval value in Table \ref{tab:conf}.  We need to 
 find the value for $N_t$.
 
 We can only detect a signal $\Delta r$ when our signal criteria is fulfilled:
@@ -544,8 +549,8 @@ We can only detect a signal $\Delta r$ when our signal criteria is fulfilled:
 \end{equation}
 
 You can look up the required Relative Interval Size in Table $\ref{tab:conf}, 100\%/3 = 33\%$ to see
-that we need to observe at least 100 events on average to reach our criteria. Therefore, $T_l = 10 minutes$ because
-we will have observed 100 activities in 10 minutes given $r_bar = \frac{10 activities}{1 min}$. That is, we 
+that we need to observe at least 100 events on average to reach our criteria. Therefore, $T_l = 10 \text{ minutes}$ because
+we will have observed $100$ activities in $10$ minutes given $\bar{r} = \frac{10 \text{ activities}}{1 \text{ min}}$. That is, we 
 must observe 10 minutes of activities to detect our desired signal.
 
 %How long does it take to identify a change in the activity rate as a signal?
@@ -560,6 +565,7 @@ must observe 10 minutes of activities to detect our desired signal.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Estimate signal sensitivity}
+\label{ex:3}
 % first pass at calc, 2013-03-12, JM
 
 Suppose we would like to determine the magnitude of a signal change needed to 
@@ -615,8 +621,7 @@ rate, $117~\si{\per\second}$.
 This is intended to help you use the Gnip social data streams more effectively.  The latest version of this
 document and supporting code for creating figures and tables can be found at:
 
- 
-\noindent \url{https://github.com/DrSkippy27/Gnip-Realtime-Social-Data-Sampling}. 
+\noindent \url{https://github.com/DrSkippy27/Gnip-Realtime-Social-Data-Sampling}.
 
 If you find errors
 or have comments, please email shendrickson@gnip.com. Thank you for using Gnip.
@@ -627,8 +632,14 @@ This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unport
 \noindent \url{http://creativecommons.org/licenses/by-sa/3.0/deed.en_US}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{References} 
 
-\bibliography{myrefs}		% expects file "myrefs.bib"
+\begin{thebibliography}{2013}
+
+\bibitem[Mor13]{Morstatter:2013} F. Morstatter, J. Pfeffer, J. Liu, K. Carley, \textsl{Is the Sample Good Enough? Comparing Data from Twitter’s Streaming API with Twitter’s Firehose}, \url{http://www.public.asu.edu/~fmorstat/paperpdfs/icwsm2013.pdf} 2013.
+
+\bibitem[Geo12]{George:2012} F. George B. Golam Kibria, \textsl{Confidence Intervals for Signal to Noise Ratio of
+a Poisson Distribution}, \url{http://thescipub.com/abstract/10.3844/amjbsp.2011.44.55} 2013.
+
+\end{thebibliography}
 
 \end{document}

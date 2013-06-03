@@ -1,5 +1,5 @@
 class figure_un {
-  
+
   String name;
   float dy;
   int n;
@@ -8,7 +8,7 @@ class figure_un {
     name = _name;
     n = _n;
   } 
-  
+
   void arrow(int x1, int y1, int x2, int y2) {
     y1 = y_size - y1;
     y2 = y_size - y2;
@@ -21,33 +21,41 @@ class figure_un {
     line(0, 0, arrow_size, -arrow_size);
     popMatrix();
   } 
-  
-  void axes(int x, int x_width, int y_height) {
+
+  void axes(int x_axis, int x_width, int y_height) {
     strokeWeight(2);
     stroke(axis_color);
-    arrow(x, x, x_width, x);
-    arrow(x, x, x, y_height);
+    arrow(x_axis, x_axis, x_width, x_axis);
+    arrow(x_axis, x_axis, x_axis, y_height);
     //
     PFont font = createFont("BookAntiqua-Bold-24.vlw", 24);
     textFont(font, 24);
-    textAlign(CENTER);
+    textAlign(CENTER, BOTTOM);
     fill(0);
     pushMatrix();
-    translate(60, y_size - (x + y_height)/2);
+    translate(text_offset, y_size - (x_axis + y_height)/2);
     rotate(-PI/2); 
     text("Activity Rate", 0, 0); 
     popMatrix();
-    text("Time", (x + x_width)/2, y_size - 60);
+    textAlign(CENTER, TOP);
+    text("Time", (x_axis + x_width)/2, y_size - text_offset);
+    annotation(font, x_axis, y_height, x_width);
   }
-  
+
+  void annotation(PFont font, int x_axis, int x_width, int y_height) {
+    textFont(font, 24);
+    textAlign(CENTER);
+    fill(0);
+  }
+
   float poisson_lbounds(int k) {
     return k*pow(1. - 1./(9.*k) - z_alpha/(3.*sqrt(k)), 3.);
   }
-  
+
   float poisson_ubounds(int k) {
     return (k+1.)*pow(1. - 1./(9.*(k+1.)) + z_alpha/(3.*sqrt(k+1.)), 3.);
   }
-  
+
   void conf_curve(int x_origin, int x_pixels, int y_pixels) {
     float x;
     float yu;
