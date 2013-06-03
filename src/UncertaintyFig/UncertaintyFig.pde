@@ -2,9 +2,11 @@ class figure_un {
   
   String name;
   float dy;
+  int n;
 
-  figure_un(String _name) {
+  figure_un(String _name, int _n) {
     name = _name;
+    n = _n;
   } 
   
   void arrow(int x1, int y1, int x2, int y2) {
@@ -46,7 +48,7 @@ class figure_un {
     return (k+1.)*pow(1. - 1./(9.*(k+1.)) + z_alpha/(3.*sqrt(k+1.)), 3.);
   }
   
-  void conf_curve(int x_origin, int x_pixels, int y_pixels, int n) {
+  void conf_curve(int x_origin, int x_pixels, int y_pixels) {
     float x;
     float yu;
     float yl;
