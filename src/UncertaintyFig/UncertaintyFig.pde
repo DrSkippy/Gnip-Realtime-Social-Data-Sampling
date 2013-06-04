@@ -19,7 +19,7 @@ class figure_un {
     translate(x1 + offset, y_size - (y1 + offset));
     float a = atan2(y2-y1, x2-x1);
     rotate(-a);
-    bezier(2*s_length/3, -s_width, -s_length/3, -s_width, s_length, 0, 0, 0);
+    bezier(squiggle*s_length, -s_width, -(1. - squiggle)*s_length, -s_width, s_length, 0, 0, 0);
     line(0, 0, arrow_size, -arrow_size);
     line(0, 0, arrow_size, arrow_size);
     popMatrix();
@@ -39,7 +39,7 @@ class figure_un {
   } 
 
   void axes(int x_axis, int x_width, int y_height) {
-    strokeWeight(2);
+    strokeWeight(int(line_weight*1.5));
     stroke(axis_color);
     arrow(x_axis, x_axis, x_width, x_axis);
     arrow(x_axis, x_axis, x_axis, y_height);
@@ -72,7 +72,7 @@ class figure_un {
     float yl;
     //
     // settings
-    strokeWeight(2);
+    strokeWeight(line_weight);
     float dx = x_pixels/n;
     dy = y_pixels/poisson_ubounds(1);
     // 
@@ -80,20 +80,6 @@ class figure_un {
     float x_last = dx;
     float yu_last = poisson_ubounds(1)/1. * dy;
     float yl_last = poisson_lbounds(1)/1. * dy;
-    //
-    fill(0);
-    strokeWeight(1);
-    stroke(marker_color);
-    int temp_n = n-3;
-    s_arrow(int(temp_n*dx), int(1*dy), int(temp_n*dx), int(1*dy + 112), 50);
-    temp_n = 6;
-    s_arrow(int(temp_n*dx), int(poisson_ubounds(temp_n)/temp_n * dy), int(temp_n*dx + 60), int(poisson_ubounds(temp_n)/temp_n * dy + 85), -45);
-    temp_n = 25;
-    s_arrow(int(temp_n*dx), int(poisson_lbounds(temp_n)/temp_n * dy), int(temp_n*dx - 40), int(poisson_lbounds(temp_n)/temp_n * dy + 115), 45);
-    //
-    textAlign(CENTER, BOTTOM);
-    text("Confidence envelope", 15*dx + x_origin, y_size - x_origin - 170);
-    text("Average rate", 33*dx + x_origin, y_size - x_origin - 190);
     //
     stroke(baseline_color);
     line(x_origin + x_last, y_size - (x_origin + 1*dy), x_origin + n*dx, y_size - (x_origin + 1*dy));
@@ -115,6 +101,19 @@ class figure_un {
       yu_last = yu;
       yl_last = yl;
     }
+    // Annotations on top
+    fill(0);
+    stroke(marker_color);
+    int temp_n = n-3;
+    s_arrow(int(temp_n*dx), int(1*dy), int(temp_n*dx), int(1*dy + 172), 45);
+    temp_n = 4;
+    s_arrow(int(temp_n*dx), int(poisson_ubounds(temp_n)/temp_n * dy), int(temp_n*dx + 40), int(poisson_ubounds(temp_n)/temp_n * dy + 75), -45);
+    temp_n = 25;
+    s_arrow(int(temp_n*dx), int(poisson_lbounds(temp_n)/temp_n * dy), int(temp_n*dx - 40), int(poisson_lbounds(temp_n)/temp_n * dy + 156), 45);
+    //
+    textAlign(CENTER, BOTTOM);
+    text("95% Confidence boundaries", 18*dx + x_origin, y_size - x_origin - 220);
+    text("Average rate", 33*dx + x_origin, y_size - x_origin - 280);
   }
 }
 
