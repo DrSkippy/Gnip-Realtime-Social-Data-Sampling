@@ -21,8 +21,8 @@ int marker_color = 0xFFFF9900;
 void setup() {
   //f = new figure_sig("fig3a.pdf", 20, 0);
   // set max from output when you run above
-  f = new figure_sig("fig3b.pdf", 7, 3.018789);
-  //f = new figure_un("fig2.pdf", 40);
+  //f = new figure_sig("fig3b.pdf", 7, 3.018789);
+  f = new figure_un("fig2.pdf", 40);
   //size(x_size, y_size);
   size(x_size, y_size, PDF, f.name);
   background(bg_color);

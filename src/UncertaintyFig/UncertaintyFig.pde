@@ -3,11 +3,27 @@ class figure_un {
   String name;
   float dy;
   int n;
+  PFont font;
 
   figure_un(String _name, int _n) {
     name = _name;
     n = _n;
   } 
+
+  void s_arrow(int x1, int y1, int x2, int y2, int s_width) {
+    // line (x1, y1) (x2, y2) points at the object, and defines the length of the arrow
+    // s_width defines the width of the arrow
+    int s_length = 2*int(sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2)));
+    noFill();
+    pushMatrix();
+    translate(x1 + offset, y_size - (y1 + offset));
+    float a = atan2(y2-y1, x2-x1);
+    rotate(-a);
+    bezier(2*s_length/3, -s_width, -s_length/3, -s_width, s_length, 0, 0, 0);
+    line(0, 0, arrow_size, -arrow_size);
+    line(0, 0, arrow_size, arrow_size);
+    popMatrix();
+  }
 
   void arrow(int x1, int y1, int x2, int y2) {
     y1 = y_size - y1;
@@ -28,9 +44,10 @@ class figure_un {
     arrow(x_axis, x_axis, x_width, x_axis);
     arrow(x_axis, x_axis, x_axis, y_height);
     //
-    PFont font = createFont("BookAntiqua-Bold-24.vlw", 24);
+    font = createFont("BookAntiqua-Bold-24.vlw", 24);
     textFont(font, 24);
     textAlign(CENTER, BOTTOM);
+    //
     fill(0);
     pushMatrix();
     translate(text_offset, y_size - (x_axis + y_height)/2);
@@ -39,13 +56,6 @@ class figure_un {
     popMatrix();
     textAlign(CENTER, TOP);
     text("Time", (x_axis + x_width)/2, y_size - text_offset);
-    annotation(font, x_axis, y_height, x_width);
-  }
-
-  void annotation(PFont font, int x_axis, int x_width, int y_height) {
-    textFont(font, 24);
-    textAlign(CENTER);
-    fill(0);
   }
 
   float poisson_lbounds(int k) {
@@ -70,6 +80,21 @@ class figure_un {
     float x_last = dx;
     float yu_last = poisson_ubounds(1)/1. * dy;
     float yl_last = poisson_lbounds(1)/1. * dy;
+    //
+    fill(0);
+    strokeWeight(1);
+    stroke(marker_color);
+    int temp_n = n-3;
+    s_arrow(int(temp_n*dx), int(1*dy), int(temp_n*dx), int(1*dy + 112), 50);
+    temp_n = 6;
+    s_arrow(int(temp_n*dx), int(poisson_ubounds(temp_n)/temp_n * dy), int(temp_n*dx + 60), int(poisson_ubounds(temp_n)/temp_n * dy + 85), -45);
+    temp_n = 25;
+    s_arrow(int(temp_n*dx), int(poisson_lbounds(temp_n)/temp_n * dy), int(temp_n*dx - 40), int(poisson_lbounds(temp_n)/temp_n * dy + 115), 45);
+    //
+    textAlign(CENTER, BOTTOM);
+    text("Confidence envelope", 15*dx + x_origin, y_size - x_origin - 170);
+    text("Average rate", 33*dx + x_origin, y_size - x_origin - 190);
+    //
     stroke(baseline_color);
     line(x_origin + x_last, y_size - (x_origin + 1*dy), x_origin + n*dx, y_size - (x_origin + 1*dy));
     stroke(point_color);

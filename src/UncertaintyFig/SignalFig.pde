@@ -13,12 +13,6 @@ class figure_sig extends figure_un {
     return 1. + dr/(1. + exp(sig_par*(dt-t)));
   }
 
-  void annotation(PFont font, int x_axis, int x_width, int y_height) {
-    textFont(font, 24);
-    textAlign(CENTER);
-    fill(0);
-  }
-
   void conf_curve(int x_origin, int x_pixels, int y_pixels) {
     float x;
     float y;
