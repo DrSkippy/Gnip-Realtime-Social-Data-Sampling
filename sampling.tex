@@ -173,11 +173,15 @@ we will define signal in terms of the activity rate.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Activity Rate} 
 
+
+
+\medskip
+The\reversemarginpar\marginpar{\raggedleft
 %%%%%
 % figure  ICON VIEW  SECTION 2.1 and 3.1
 %
-\begin{figure}[!h]
-    \begin{tikzpicture}[scale=0.2]]
+%\begin{figure}[!h]
+    \begin{tikzpicture}[scale=0.26]]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % generated code
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -192,12 +196,11 @@ we will define signal in terms of the activity rate.
 \draw [green,  ultra thick] ( 3.0 , 0 ) circle [radius= 0.5 ];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \end{tikzpicture}
-\end{figure}
+%\end{figure}
 %
 %
 %%%%%
-
-The average activity rate is calculated by,
+} average activity rate is calculated by,
 
 \begin{equation}
     \label{eq:rateEst}
@@ -233,28 +236,6 @@ uncertainty in the rate estimate and the size of the signal we can detect.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Signal Sensitivity}
 
-
-%%%%%
-% figure  ICON VIEW  SECTION 2.2
-%
-\begin{figure}[!h]
-    \begin{tikzpicture}[scale=0.2]]
-\draw [red, very thick, rotate around={60: (1.5, 2.598076211353316)}] (0.8, 1.898076211353316) rectangle(2.2, 3.298076211353316);
-%
-\draw [very thick, <->] (0.25000000000000006, 0.4330127018922193) -- (1.25, 2.165063509461097) ;
-\draw [very thick, <->] (1.75, 2.165063509461097) -- (2.75, 0.4330127018922193) ;
-\draw [very thick, <->] (2.5, 0) -- (0.5, 0) ;
-%
-\draw [orange, ultra thick] (0,0) circle [radius= 0.5 ];
-\draw [yellow, ultra thick] ( 1.5 , 2.59807621135 ) circle [radius= 0.5 ];
-\draw [green,  ultra thick] ( 3.0 , 0 ) circle [radius= 0.5 ];
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    \end{tikzpicture}
-\end{figure}
-%
-%
-%%%%%
-
 %%%%%
 % figure
 %
@@ -269,7 +250,30 @@ uncertainty in the rate estimate and the size of the signal we can detect.
 %
 %%%%%
 
-When activity rates are high, rate estimates will be more certain; when low, rate estimates will be less certain. High uncertainty
+When
+\reversemarginpar\marginpar{\raggedleft
+%%%%%
+% figure  ICON VIEW  SECTION 2.2
+%
+%\begin{figure}[!h]
+    \begin{tikzpicture}[scale=0.26]]
+\draw [red, very thick, rotate around={60: (1.5, 2.598076211353316)}] (0.8, 1.898076211353316) rectangle(2.2, 3.298076211353316);
+%
+\draw [very thick, <->] (0.25000000000000006, 0.4330127018922193) -- (1.25, 2.165063509461097) ;
+\draw [very thick, <->] (1.75, 2.165063509461097) -- (2.75, 0.4330127018922193) ;
+\draw [very thick, <->] (2.5, 0) -- (0.5, 0) ;
+%
+\draw [orange, ultra thick] (0,0) circle [radius= 0.5 ];
+\draw [yellow, ultra thick] ( 1.5 , 2.59807621135 ) circle [radius= 0.5 ];
+\draw [green,  ultra thick] ( 3.0 , 0 ) circle [radius= 0.5 ];
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \end{tikzpicture}
+%\end{figure}
+%
+%
+%%%%%
+}
+  activity rates are high, rate estimates will be more certain; when low, rate estimates will be less certain. High uncertainty
 in the rate estimates may hide the small changes in activity rates we wish to identify.  The variation in activity rate due to the statistics
 associate with infrequent events (or short observation time) must be smaller than the signal we want to detect. Therefore, we observe
 a valid signal in a time series when the activity rate has changed by more than the rate signal sensitivity, $\Delta r$, defined as,
@@ -285,11 +289,13 @@ must observe activities for a time, $T > T_l$, to achieve the desired signal sen
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Signal Sensitivity--Confidence Criteria} 
 
+We 
+\reversemarginpar\marginpar{\raggedleft
 %%%%%
 % figure  ICON VIEW SECTION 2.3
 %
-\begin{figure}[!h]
-    \begin{tikzpicture}[scale=0.2]]
+%\begin{figure}[!h]
+    \begin{tikzpicture}[scale=0.26]]
 \draw [red, very thick, rotate around={-60: (3.0, 0)}] (-0.7, -0.7) rectangle(3.7, 0.7);
 %
 \draw [very thick, <->] (0.25000000000000006, 0.4330127018922193) -- (1.25, 2.165063509461097) ;
@@ -301,12 +307,12 @@ must observe activities for a time, $T > T_l$, to achieve the desired signal sen
 \draw [green,  ultra thick] ( 3.0 , 0 ) circle [radius= 0.5 ];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \end{tikzpicture}
-\end{figure}
+%\end{figure}
 %
 %
 %%%%%
-
-We will be estimating the activity rate in Equation~\ref{eq:rateEst} by counting activities for a determined time period.  The
+}
+will be estimating the activity rate in Equation~\ref{eq:rateEst} by counting activities for a determined time period.  The
 number activities in any given period will be distributed about the long term mean. As we count more activities, our
 estimate of rate will converge toward the true value.  If we count thousands of activities per minute, our confidence of the estimate
 of activity rate will be very high after a short time.  For rare activities, we will have to count longer before we have
@@ -340,11 +346,13 @@ In this section, we examine the underlying statistics in order to calculate conf
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Poisson Activity Probability} 
 
+A
+\reversemarginpar\marginpar{\raggedleft
 %%%%%
 % figure  ICON VIEW  SECTION 2.1 and 3.1
 %
-\begin{figure}[!h]
-    \begin{tikzpicture}[scale=0.2]]
+%\begin{figure}[!h]
+    \begin{tikzpicture}[scale=0.26]]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % generated code
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -359,12 +367,12 @@ In this section, we examine the underlying statistics in order to calculate conf
 \draw [green,  ultra thick] ( 3.0 , 0 ) circle [radius= 0.5 ];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \end{tikzpicture}
-\end{figure}
+%\end{figure}
 %
 %
 %%%%%
-
-A model of counts of rare activities is that the inter-arrival times are exponentially distributed, 
+}
+model of counts of rare activities is that the inter-arrival times are exponentially distributed, 
 
 \begin{equation}
     \label{eq:tbe}
@@ -384,11 +392,13 @@ The expected value is $E[n]=n=rt$. The mean and variance of the Poisson distribu
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Poisson Confidence Intervals} 
 
+We 
+\reversemarginpar\marginpar{\raggedleft
 %%%%%
 % figure  ICON VIEW SECTION 3.2
 %
-\begin{figure}[!h]
-    \begin{tikzpicture}[scale=0.2]]
+%\begin{figure}[!h]
+    \begin{tikzpicture}[scale=0.26]]
 \draw [red, very thick, rotate around={0: (0, 0)}] (-0.7, -0.7) rectangle(3.7, 0.7);
 %
 \draw [very thick, <->] (0.25000000000000006, 0.4330127018922193) -- (1.25, 2.165063509461097) ;
@@ -400,12 +410,12 @@ The expected value is $E[n]=n=rt$. The mean and variance of the Poisson distribu
 \draw [green,  ultra thick] ( 3.0 , 0 ) circle [radius= 0.5 ];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \end{tikzpicture}
-\end{figure}
+%\end{figure}
 %
 %
 %%%%%
-
-We are counting activities in a defined time interval to estimate the activity rate $\bar{r}$. Confidence intervals \cite{Geo2012} for the
+}
+are counting activities in a defined time interval to estimate the activity rate $\bar{r}$. Confidence intervals \cite{Geo2012} for the
 Poisson distribution with confidence level $\text{conf\%} = 100\%(1-\alpha)$ are given by,
 
 \begin{equation}
@@ -496,11 +506,13 @@ of average rate per bucket $\bar{r} = n/\Delta t$ adds another layer of variabil
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Summary of Parameters and Trade offs}
 
+When 
+\reversemarginpar\marginpar{\raggedleft
 %%%%%
 % figure  ICON VIEW SECTION 3.4
 %
-\begin{figure}[!h]
-    \begin{tikzpicture}[scale=0.2]]
+%\begin{figure}[!h]
+    \begin{tikzpicture}[scale=0.26]]
 \draw [red, very thick, rotate around={0: (0, 0)}] (-0.7, -0.7) rectangle(3.7, 3.298076211353316);
 %
 \draw [very thick, <->] (0.25000000000000006, 0.4330127018922193) -- (1.25, 2.165063509461097) ;
@@ -512,12 +524,12 @@ of average rate per bucket $\bar{r} = n/\Delta t$ adds another layer of variabil
 \draw [green,  ultra thick] ( 3.0 , 0 ) circle [radius= 0.5 ];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \end{tikzpicture}
-\end{figure}
+%\end{figure}
 %
 %
 %%%%%
-
-When activities are common, we can estimate the activity rate to a high level of certainty in a short time. With lower
+}
+activities are common, we can estimate the activity rate to a high level of certainty in a short time. With lower
 uncertainty in our estimate of activity rate, we can detect small changes in activity rate--we have high Signal
 Sensitivity. For rare activities, we have to wait longer to count enough activities to estimate the activity rate to
 the desired level of confidence to detect a small signal. These trade offs are summarized in the Table~\ref{tab:tradeoff}.
