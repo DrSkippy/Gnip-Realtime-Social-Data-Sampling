@@ -7,6 +7,8 @@
 \usepackage{tikz}
 \usepackage{hyperref}
 
+\usepackage[margin=0.75cm]{caption}
+
 % see http://texblog.org/2008/05/07/fwd-equal-cell-width-right-and-centre-aligned-content/
 \newcolumntype{x}[1]{%
 >{\centering\hspace{0pt}}p{#1}}%
@@ -20,11 +22,12 @@
 \begin{document}
 \maketitle
 
+\frenchspacing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
 We often wish to calculate social activity rates to identify signals of emerging topics or stories.
-We want to know what we can detect and understand the certainty of our estimates. This means
+We want to know what we can detect and want to understand the certainty of our estimates. This means
 we need to calculate the relationship between activity counts, signal sensitivity and confidence. This
 is illustrated in Figure~\ref{fig:tradeoff}. The event rate is the number of activities per time,
 the signal is the change in rate, and confidence comes from the statistics of the activities and
@@ -82,9 +85,9 @@ calculate the third. }
 %
 %%%%%
 
-For many topics, social media streams contain data with sufficient frequency to create reliable, high-resolution signals in short observation times.  But for the less common topics, the activities (e.g. blog posts or tweets) are less frequent and we need to take care in identifying the observation time, signal sensitivity and confidence level. These three quantities are related; typically, we can choose two and calculate the third.
+For many topics, social media streams contain data with sufficient frequency to create reliable, high-resolution signals in short observation times.  But for the less common topics, the activities (e.g. blog posts or Tweets) are less frequent and we need to take care in identifying the observation time, signal sensitivity and confidence level. These three quantities are related; typically, we can choose two and calculate the third.
 
-There are a handful of related questions that may come up regarding sampling and signals.  In the next section, we list some of these questions to explore the meaning of the relationships outlined above. After that, we will look at filtering and sampling in a little more detail.  The middle of this white paper builds up the calculation method required to answer these questions. Finally, in the last section, we provide example calculations.
+There are a handful of related questions that may come up regarding sampling and signals.  In the next section, we list some of these questions to explore the meaning of the relationships outlined above. After that, we will look at filtering and sampling in a little more detail.  The middle of this white paper builds up the calculation method required to answer these questions. Finally, in the last section, we will provide example calculations.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Motivating Questions} 
@@ -115,7 +118,7 @@ plan to use a sampling filter, it may be useful to explore sampling before movin
 If not, please skip to the next section.
 
 There are two approaches to sampling a firehose of social data. Both involve reducing the number of activities in the 
-real time stream to a manageable size for analysis. \footnote{Twitter's filtered, rate-limited 1\% streaming API provides a 
+real-time stream to a manageable size for analysis. \footnote{Twitter's filtered, rate-limited 1\% streaming API provides a 
 non-deterministic combination that is not suitable for many analytic tasks.  See \cite{Morstatter:2013}.} 
 
 The first step is to use keyword filtering.  Gnip provides filtering on keywords to select only the portion of the stream
@@ -130,13 +133,13 @@ example, using Gnip's sampling operator, we can reduce the stream to only fracti
 The corresponding Powertrack rule would become  ``(super bowl OR superbowl) sample:12''.
 
 It is useful to know how Gnip's sampling algorithms work to inform sampling decisions.  Sampling is available on
-Gnip's premium streams including Tumblr, Twitter, Wordpress and Disqus. Some key features of Gnip sampling:
+Gnip's premium streams including Tumblr, Twitter, WordPress and Disqus. Some key features of Gnip sampling:
 
 \begin{enumerate}
 	\item 1\% resolution
 	\item Stable sampling rate (short time resolution)
-	\item Sample is deterministic and returns the same activites for near-rule matches.  For example, this means
-	that you will get the same tweets for matches to the ``super bowl'' portion of the rules ``super bowl sample:12'' 
+	\item The sample is deterministic and returns the same activities for near-rule matches.  For example, this means
+	that you will get the same Tweets for matches to the ``super bowl'' portion of the rules ``super bowl sample:12'' 
 	and ``(super bowl OR superbowl) sample:12''
 	\item Sampling is progressively inclusive (i.e. a 2\% stream (e.g. ``sample:2'') includes the exact activities from
 	the 1\% stream plus an 
@@ -158,7 +161,7 @@ activities in a day.
 Once you understand this order, it is natural to ask why Gnip does not filter first, then sample. The difference is not
 in the final outcome, but how long you have to wait for a reliable estimate of rate. If Gnip were to filter on keywords
 first, Equation~\ref{eq:sbsample} would also be a reasonable estimate of $N_{observed}$ on the time scale of the 
-sampling calculation. However, this process would require relaxing properties 3 and 4 in the list above. Both attributes
+sampling calculation. However, this process would require abandoning properties 3 and 4 in the list above. Both attributes
 are desirable for most social data projects. Doing the sample first, followed by the keyword filter, gives a slightly
 more complex behavior because it requires us to deal the effects of statistical variations in the short term.
 
@@ -208,7 +211,7 @@ The\reversemarginpar\marginpar{\raggedleft
 \end{equation}
 where $N$ is the number of activities and $T$ the time period over which we count activities.  Because there will be statistical
 variations in the number of activities in any given time interval, there will be some uncertainty in our estimate of average rate. 
-The more activities we count, the lower the uncertainty in our estimate as shown in Figure~\ref{fig:confidence}.
+The more activities we count, the more certain our estimate as shown in Figure~\ref{fig:confidence}.
 
 %%%%%
 % figure
@@ -283,7 +286,8 @@ a valid signal in a time series when the activity rate has changed by more than 
     | r(t_f) - r(t_i) | \geq \Delta r.
 \end{equation}
 
-The associated time scale of the change, $T_l = t_f - t_i$, is the signal latency.  This definition implies that we 
+$t_f$ and $t_i$ are the final and initial times at which the rate is measured. The associated time 
+scale of the change, $T_l = t_f - t_i$, is the signal latency.  This definition implies that we 
 must observe activities for a time, $T > T_l$, to achieve the desired signal sensitivity, $\Delta r$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -415,7 +419,7 @@ We
 %
 %%%%%
 }
-are counting activities in a defined time interval to estimate the activity rate $\bar{r}$. Confidence intervals \cite{Geo2012} for the
+are counting activities in a defined time interval to estimate the activity rate $\bar{r}$. Confidence intervals \cite{George:2012} for the
 Poisson distribution with confidence level $\text{conf\%} = 100\%(1-\alpha)$ are given by,
 
 \begin{equation}
@@ -425,7 +429,7 @@ Poisson distribution with confidence level $\text{conf\%} = 100\%(1-\alpha)$ are
 where $\chi^2$ is the inverse cumulative distribution function, $CDF^{-1}(p; n)$, of the $\chi^2$ distribution.\footnote{A useful approximation to the exact interval is given by  $[ n(1 - \frac{1}{9n} - \frac{z_{\alpha}}{3\sqrt{n}})^3 , (n+1)(1- \frac{1}{9(n+1)} + \frac{z_{\alpha}}{3\sqrt{n+1}})^3]$. }
 Note that with this definition of $\alpha$, a confidence interval of 90\% corresponds to $\alpha=0.1$.
 
-Confidence interval sizes for confidence levels of 90\% are shown in Table \ref{tab:conf}
+Confidence interval sizes for confidence levels of 90\% are shown in Table \ref{tab:conf}.
 
 \begin{table}\centering
     \begin{tabular}{r|x{3.5cm}|r|r}
@@ -472,7 +476,7 @@ the other parameters. Calculations for various design choices are illustrated in
 \subsection{Confidence Interval Approximations and Bucketed Activity Counts}
 
 This section deals with approximations to the Poisson confidence interval for large numbers of activities. In
-addition, we it contains some observations about bucketed activity counts. You can skip this section and
+addition, it contains some observations about bucketed activity counts. You can skip this section and
 move to calculations if these ideas don't apply to your system.
 
 \subsubsection{Frequent Activities} 
@@ -504,7 +508,7 @@ bucket resolution time will not be an even multiple of the bucket size.  In this
 of average rate per bucket $\bar{r} = n/\Delta t$ adds another layer of variability.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Summary of Parameters and Trade offs}
+\subsection{Summary of Parameters and Trade )ffs}
 
 When 
 \reversemarginpar\marginpar{\raggedleft
@@ -669,7 +673,7 @@ must observe 10 minutes of activities to detect our desired signal.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Estimate signal sensitivity}
+\subsection{Estimate Signal Sensitivity}
 \label{ex:3}
 % first pass at calc, 2013-03-12, JM
 
