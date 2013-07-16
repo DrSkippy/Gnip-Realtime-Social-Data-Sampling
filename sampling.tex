@@ -26,13 +26,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
-We often wish to calculate social activity rates to identify signals of emerging topics or stories.
-We want to know what we can detect and want to understand the certainty of our estimates. This means
-we need to calculate the relationship between activity counts, signal sensitivity and confidence. This
-is illustrated in Figure~\ref{fig:tradeoff}. The event rate is the number of activities per time,
-the signal is the change in rate, and confidence comes from the statistics of the activities and
-sampling operators. Time enters the calculation because the longer we count, the more activities
-we count.
+We often wish to calculate social activity rates to identify signals of emerging topics or stories. We want to know what we can detect and with what certainty. To do so, we need to calculate the relationship between activity counts, signal sensitivity and confidence. This relationship is illustrated in Figure~\ref{fig:tradeoff}. The number of activities per time defines the event rate. The signal is the change in the event rate. The confidence around the event rate comes from the statistics of the activities and sampling operators. Time enters the calculation because the longer we count, the more activities we count.
 
 %%%%%
 % figure
@@ -58,10 +52,7 @@ we count.
 	\node[align=center, below] at (3.5,-0.5){confidence\\($\delta_{rate,N}$)};
 	\end{tikzpicture}
 \end{center}
-\caption{The number of activities is a product of the rate and time. Signal is
-the change in event rate we want to detect. Confidence characterizes the uncertainty
-in our estimate of rate. These parameters are not independent: choose any two and
-calculate the third. }
+\caption{Signal calculation relationships. }
 \label{fig:tradeoff}
 \end{figure}
 %
@@ -85,7 +76,7 @@ calculate the third. }
 %
 %%%%%
 
-For many topics, social media streams contain data with sufficient frequency to create reliable, high-resolution signals in short observation times.  But for the less common topics, the activities (e.g. blog posts or Tweets) are less frequent and we need to take care in identifying the observation time, signal sensitivity and confidence level. These three quantities are related; typically, we can choose two and calculate the third.
+For many topics, social media streams contain activities (e.g. blog posts or Tweets) with sufficient frequency to create reliable, high-resolution signals in short observation times.  However, the less common topics with infrequent activities require care in identifying the observation time, signal sensitivity and confidence level. These three quantities are related; typically, we can choose two and calculate the third.
 
 There are a handful of related questions that may come up regarding sampling and signals.  In the next section, we list some of these questions to explore the meaning of the relationships outlined above. After that, we will look at filtering and sampling in a little more detail.  The middle of this white paper builds up the calculation method required to answer these questions. Finally, in the last section, we will provide example calculations.
 
@@ -97,7 +88,7 @@ Common questions regardind rate, signal and confidence level:
 \begin{itemize}
 	\item The activity rate has doubled from five counts to ten counts between two of my buckets. Is this a significant change? 
 	Or is this expected variation due to low-frequency events?
-	\item I want to minimize the total number activities I consume, what sampling factor should I use if I want to detect
+	\item I want to minimize the total number activities that I consume, what sampling factor should I use if I want to detect
 	changes of 2x in activity rate in 1-hour?
 	\item How long should I observe and count activities to detect a change in signal of 5\%?
 	\item How do I describe the trade-off between signal latency (how long I have to wait) and rate uncertainty (how 
@@ -112,9 +103,9 @@ Common questions regardind rate, signal and confidence level:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Sample Operators and Order of Filters} 
 
-In order to to control costs or to scale analysis, we may choose to sample a known fraction of the total social activities. This presents an
-additional complexity to the ideas introduced in the introduction. Using a sampling filter effectively decreases the rate of activities. If you
-plan to use a sampling filter, it may be useful to explore sampling before moving the the core of the calculation.  
+In order to to control costs or to scale analysis, we may choose to sample a known fraction of the total social activities. This adds an
+additional piece of complexity to the relationship from Figure~\ref{fig:tradeoff}. Using a sampling filter effectively decreases the rate of activities. If you
+plan to use a sampling filter, it may be useful to explore sampling before moving to the core of the calculation.  
 If not, please skip to the next section.
 
 There are two approaches to sampling a firehose of social data. Both involve reducing the number of activities in the 
@@ -203,14 +194,14 @@ The\reversemarginpar\marginpar{\raggedleft
 %
 %
 %%%%%
-} average activity rate is calculated by,
+} average activity rate per time bucket is calculated by,
 
 \begin{equation}
     \label{eq:rateEst}
     \bar{r} = \frac{N}{T}
 \end{equation}
-where $N$ is the number of activities and $T$ the time period over which we count activities.  Because there will be statistical
-variations in the number of activities in any given time interval, there will be some uncertainty in our estimate of average rate. 
+where $N$ is the number of activities per time bucket. Due to the statistical
+variations in the number of activities in any given time interval, uncertainty exists in our estimate of average rate. 
 The more activities we count, the more certain our estimate as shown in Figure~\ref{fig:confidence}.
 
 %%%%%
@@ -229,7 +220,7 @@ represents the rate while the blue lines show the upper and lower 95\% confidenc
 %%%%%
 
 Below, we will determine how many activities $N$ we need to count to estimate the average activity rate, $\bar{r}$, to a desired level
-of confidence (e.g. 95\%). Or, inverting this question: given a level of confidence, how wide is the range of uncertainty
+of confidence (e.g. 95\%). In other words, we can ask: given a level of confidence, how wide is the range of uncertainty
 about the rate estimate?
 
 The details of calculating the confidence level can be found in the next section.  Next, we explore the connection between
@@ -276,17 +267,19 @@ When
 %
 %%%%%
 }
-  activity rates are high, rate estimates will be more certain; when low, rate estimates will be less certain. High uncertainty
-in the rate estimates may hide the small changes in activity rates we wish to identify.  The variation in activity rate due to the statistics
-associate with infrequent events (or short observation time) must be smaller than the signal we want to detect. Therefore, we observe
-a valid signal in a time series when the activity rate has changed by more than the rate signal sensitivity, $\Delta r$, defined as,
-
+  When activity rates are high, rate estimates will be more certain; when low, rate estimates will be less certain. High uncertainty
+in the rate estimates may hide the small changes between the bucketed activity rates that we wish to identify.  The variation in activity rate due to the statistics
+associated with infrequent events must be smaller than the signal we want to detect. Therefore, we observe
+a valid signal in a time series when the activity rate between buckets has changed by more than the rate signal sensitivity, $\Delta r$, defined as,
+%%Consideration: when we talk about the change in activity rate, we're talking about a change between buckets; however, we do not specify which rate signal sensitivity we're using to compare. For two buckets, we see two singnal sensitivities. Options:
+%%1.) We could average the two signal sensativities to compare with $\Delta r$
+%%2.) We could de‎fine $\Delta r$ as the distance between uncertainty bounds between buckets and still continue to use the definition of signal as $\delta r$<<$\Delta r$.  
 \begin{equation}
     \label{eq:signal}
     | r(t_f) - r(t_i) | \geq \Delta r.
 \end{equation}
 
-$t_f$ and $t_i$ are the final and initial times at which the rate is measured. The associated time 
+Each bucket size is defined by the difference between the variables $t_f$ and $t_i$ as they represent the final and initial times at which each activity rate is measured. The associated time 
 scale of the change, $T_l = t_f - t_i$, is the signal latency.  This definition implies that we 
 must observe activities for a time, $T > T_l$, to achieve the desired signal sensitivity, $\Delta r$.
 
@@ -316,8 +309,8 @@ We
 %
 %%%%%
 }
-will be estimating the activity rate in Equation~\ref{eq:rateEst} by counting activities for a determined time period.  The
-number activities in any given period will be distributed about the long term mean. As we count more activities, our
+We will be estimating the activity rate in Equation~\ref{eq:rateEst} by counting activities for a determined time period.  The
+number of activities in any given period will be distributed about the long term mean. As we count more activities, our
 estimate of rate will converge toward the true value.  If we count thousands of activities per minute, our confidence of the estimate
 of activity rate will be very high after a short time.  For rare activities, we will have to count longer before we have
 a high level of confidence in our rate estimate.
