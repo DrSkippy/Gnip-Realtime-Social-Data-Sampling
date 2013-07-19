@@ -163,7 +163,7 @@ more complex behavior because it requires us to deal the effects of statistical 
 \section{Signal} 
 
 In many situations, the main question is: \emph{``How many events must we observe in order to detect a change in activity rate?"} Answering
-this question requires an understanding of the trade offs between sampling time, activity rates, and signal size.  First, 
+this question requires an understanding of the trade-offs between sampling time, activity rates, and signal size.  First, 
 we will define signal in terms of the activity rate.
 
 
@@ -240,7 +240,7 @@ uncertainty in the rate estimate and the size of the signal we can detect.
     \centering
     \includegraphics[width=3.5in]{./imgs/fig3a.pdf}
     \includegraphics[width=3.5in]{./imgs/fig3b.pdf}
-        \caption{A signal can be detected when the change in rate is greater than the uncertainty in the rate estimates.}
+        \caption{A change in rate from the start time (left) to the end time (right) can be detected when the change in rate is equal to the uncertainty in the rate estimates (shown in the upper image). When the uncertainty is large, the signal is hidden in the noise (lower image).}
     \label{fig:signal}
 \end{figure}
 %
@@ -312,7 +312,7 @@ We
 %
 %%%%%
 }
-We will be estimating the activity rate in Equation~\ref{eq:rateEst} by counting activities for a determined time period.  The
+will be estimating the activity rate in Equation~\ref{eq:rateEst} by counting activities for a determined time period.  The
 number of activities in any given period will be distributed about the long term mean. As we count more activities, our
 estimate of rate will converge toward the true value.  If we count thousands of activities per minute, our confidence of the estimate
 of activity rate will be very high after a short time.  For rare activities, we will have to count longer before we have
@@ -336,7 +336,7 @@ uncertainty the change in rate must be.
 \end{equation}
 where $\eta \ge 1$.
 
-This criteria represents the trade off between signal size and confidence.
+This criteria represents the trade-off between signal size and confidence.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Statistics of Time Series of Activities} 
@@ -504,7 +504,7 @@ bucket resolution time will not be an even multiple of the bucket size.  In this
 of average rate per bucket $\bar{r} = n/\Delta t$ adds another layer of variability.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Summary of Parameters and Trade )ffs}
+\subsection{Summary of Parameters and Trade-Offs}
 
 When 
 \reversemarginpar\marginpar{\raggedleft
@@ -532,10 +532,10 @@ When
 activities are common, we can estimate the activity rate to a high level of certainty in a short time. With lower
 uncertainty in our estimate of activity rate, we can detect small changes in activity rate--we have high Signal
 Sensitivity. For rare activities, we have to wait longer to count enough activities to estimate the activity rate to
-the desired level of confidence to detect a small signal. These trade offs are summarized in the Table~\ref{tab:tradeoff}.
+the desired level of confidence to detect a small signal. These trade-offs are summarized in the Table~\ref{tab:tradeoff}.
 
-For reference, we assemble the parameter definitions and a table summarizing trade offs.  Table~\ref{tab:summary}
-summarizes the parameters of the model. Table~\ref{tab:tradeoff} summarizes the trade offs in parameters for
+For reference, we assemble the parameter definitions and a table summarizing trade-offs.  Table~\ref{tab:summary}
+summarizes the parameters of the model. Table~\ref{tab:tradeoff} summarizes the trade-offs in parameters for
 a given target.
 
 \begin{table} [!h]
@@ -584,7 +584,7 @@ Decrease signal uncertainty   (decrease $\eta$)  & increase $T$ (increase number
 	for small $\eta \le 1$\\
 \hline
 \end{tabular}
-\caption{Summary of model trade offs.}
+\caption{Summary of model trade-offs.}
 \label{tab:tradeoff}
 
 \end{table}
@@ -732,7 +732,6 @@ If you find errors
 or have comments, please email shendrickson@gnip.com. Thank you for using Gnip.
 
 This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License:
-
 
 \noindent \url{http://creativecommons.org/licenses/by-sa/3.0/deed.en_US}.
 
