@@ -13,7 +13,7 @@
 \newcolumntype{x}[1]{%
 >{\centering\hspace{0pt}}p{#1}}%
 
-\title{Real Time Social Data Sampling }
+\title{Real-Time Social Data Sampling }
 \author[]{Scott Hendrickson}
 \author[]{Brian Lehman}
 \author[]{Joshua Montague}
@@ -23,88 +23,100 @@
 \maketitle
 
 \frenchspacing
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
+\label{intro}
 
-We often wish to calculate social activity rates to identify signals of emerging topics or stories. We want to know what we can detect and with what certainty. To do so, we need to calculate the relationship between activity counts, signal sensitivity and confidence. This relationship is illustrated in Figure~\ref{fig:tradeoff}. The number of activities per time defines the event rate. The signal is the change in the event rate. The confidence around the event rate comes from the statistics of the activities and sampling operators. Time enters the calculation because the longer we count, the more activities we count.
 
+% keep this code at the top of the Introduction to ensure the figure stays on page 1
+%
 %%%%%
 % figure
 %
-\begin{figure}[h]
+\begin{figure}[!b]
 \begin{center}
-	%%%%%
-	%
-	% http://cremeronline.com/LaTeX/minimaltikz.pdf
-	%
-	\begin{tikzpicture}[scale=1.1]]
-	% arrows
-	\draw [thick, <->] (0.25000000000000006, 0.4330127018922193) -- (1.25, 2.165063509461097) ;
-	\draw [thick, <->] (1.75, 2.165063509461097) -- (2.75, 0.4330127018922193) ;
-	\draw [thick, <->] (2.5, 0) -- (0.5, 0) ;
-	% circles
-	\draw [orange, ultra thick] (0,0) circle [radius=0.5];
-	\draw [yellow, ultra thick] (1.5,2.598) circle [radius=0.5];
-	\draw [green, ultra thick] (3,0) circle [radius=0.5];
-	% labels
-	\node[align=center, below] at (-0.5,-0.5){activities\\($N=rate \times time$)};
-	\node[align=center, above] at (1.5,3.098){signal\\($\Delta r=rate_{final}-rate_{init}$)};
-	\node[align=center, below] at (3.5,-0.5){confidence\\($\delta_{rate,N}$)};
-	\end{tikzpicture}
+% http://cremeronline.com/LaTeX/minimaltikz.pdf
+\begin{tikzpicture}[scale=1.1]]
+% arrows
+\draw [thick, <->] (0.25000000000000006, 0.4330127018922193) -- (1.25, 2.165063509461097) ;
+\draw [thick, <->] (1.75, 2.165063509461097) -- (2.75, 0.4330127018922193) ;
+\draw [thick, <->] (2.5, 0) -- (0.5, 0) ;
+% circles
+\draw [orange, ultra thick] (0,0) circle [radius=0.5];
+\draw [yellow, ultra thick] (1.5,2.598) circle [radius=0.5];
+\draw [green, ultra thick] (3,0) circle [radius=0.5];
+% labels
+\node[align=center, below] at (-0.5,-0.5){activities\\($N=rate \times time$)};
+\node[align=center, above] at (1.5,3.098){signal\\($\Delta r=rate_{final}-rate_{init}$)};
+\node[align=center, below] at (3.5,-0.5){confidence\\($\delta_{rate,N}$)};
+\end{tikzpicture}
 \end{center}
-\caption{The number of activities is a product of the rate and time. Signal is
-the change in event rate we want to detect. Confidence characterizes the uncertainty
-in our estimate of rate. These parameters are not independent: choose any two and
-calculate the third.  }
+\caption{The three parameters used in classifying signal from real-time data: signal size, 
+total activities, and confidence. Signal size is a change in activity rate, the total 
+number of activities observed is a function of observation time, and confidence is that of a reported 
+activity rate. These parameters are not simultaneously independent; we can choose or measure 
+any two and then calculate the third.}
 \label{fig:tradeoff}
 \end{figure}
 %
 %
 %%%%%
 
-%%%%%
-% hand drawn figure
-%
-%\begin{figure}[h]
-%    	%\centering
-%	\begin{center}
-%		\includegraphics[width=1.75in]{./imgs/tradeoff.jpg}
-%	\end{center}
-%\caption{The number of events is a product of the rate and time. Signal is
-%the change in event rate we want to detect. Confidence characterizes the uncertainty
-%in our estimate of rate. These parameters are not independent: choose any two and
-%calculate the third. }
-%\label{fig:tradeoff}
-%
-%
-%%%%%
 
-For many topics, social media streams contain activities (e.g. blog posts or Tweets) with sufficient frequency to create reliable, high-resolution signals in short observation times.  However, the less common topics with infrequent activities require care in identifying the observation time, signal sensitivity and confidence level. These three quantities are related; typically, we can choose two and calculate the third.
+In the world of real-time social data, we are typically observing a series of activities during some 
+period of time and are interested in identifying significant changes in the corresponding activity 
+rate. Such changes may be signals of emerging events or conversations and we would like to 
+quantify our ability to identify these kinds of signals. Figure~\ref{fig:tradeoff} illustrates 
+(schematically) the three main parameters involved in such calculations: signal size, total 
+activities, and confidence. The three parameters are not simultaneously independent; we can 
+choose or measure two of them -- possibly based on our particular use-case -- and they will 
+determine the third. If chosen as \emph{ad hoc} parameters, respectively, the signal 
+size is a difference in activity rates between two observation times, the number of total 
+activities is a function of the observation time and underlying instantaneous rate, and the 
+confidence is a measure of statistical uncertainty in the activity rate e.g. a 95$\%$ 
+confidence interval.
 
-There are a handful of related questions that may come up regarding sampling and signals.  In the next section, we list some of these questions to explore the meaning of the relationships outlined above. After that, we will look at filtering and sampling in a little more detail.  The middle of this white paper builds up the calculation method required to answer these questions. Finally, in the last section, we will provide example calculations.
+For popular topics, social media streams contain a sufficient rate of activities e.g. blog posts or 
+Tweets to create reliable, high-resolution signals in short observation times.  
+However, less popular topics with infrequent activities require additional effort in order to adequately 
+determine the number of activities, signal sensitivity and confidence level appropriate for the 
+situation.
+
+In Section~\ref{Qs}, we begin with examples of questions that may arise regarding 
+the sampling of real-time social data. In Section~\ref{filter}, we outline some of the mechanisms 
+by which a user might collect data from Gnip, specifically. In Sections~\ref{sig} and \ref{time}, we 
+outline the mathematical framework for calculations of activity rate and sampling statistics. Finally, 
+in Section~\ref{examples}, we work through some example calculations.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Motivating Questions} 
+\label{Qs}
 
-Common questions regardind rate, signal and confidence level:
+Examples of typical questions regarding activity rate, signal and confidence level:
 
 \begin{itemize}
-	\item The activity rate has doubled from five counts to ten counts between two of my buckets. Is this a significant change? 
-	Or is this expected variation due to low-frequency events?
-	\item I want to minimize the total number activities that I consume, what sampling factor should I use if I want to detect
-	changes of 2x in activity rate in 1-hour?
-	\item How long should I observe and count activities to detect a change in signal of 5\%?
+	\item The activity rate has doubled from five counts to ten counts between two of my measurement 
+buckets. Is this change significant, or is this expected variation e.g. due to low-frequency events?
+	\item I want to minimize the total number activities that I consume. How can I use a sampling factor 
+and still detect a change of 2x in activity rate in 1 hour?
+	\item How long should I count activities to detect a change in signal of 5\%?
 	\item How do I describe the trade-off between signal latency (how long I have to wait) and rate uncertainty (how 
 	confidently I can estimate activity rate)?
-	\item How do I define confidence levels on rate estimates for a social activity time series with only 20 events per day?
+	\item How do I define confidence levels on rate estimates for an activity time series with only twenty events per day?
 	\item I plan to bucket the data in order to estimate activity rate, how big (i.e. what duration) should the buckets be? 
 	\item How many activities should I target to collect in each bucket in order to be have a 95\% confidence that my 
 	rate estimate is accurate for each bucket? 
-%\item \ldots
 \end{itemize}
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Sample Operators and Order of Filters} 
+\subsection{Filtering and Sampling} 
+\label{filter}
+
+This section is clearly about PowerTrack and then the Sampling operator.
 
 In order to to control costs or to scale analysis, we may choose to sample a known fraction of the total social activities. This adds an
 additional piece of complexity to the relationship from Figure~\ref{fig:tradeoff}. Using a sampling filter effectively decreases the rate of activities. If you
@@ -161,6 +173,7 @@ more complex behavior because it requires us to deal the effects of statistical 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Signal} 
+\label{sig}
 
 In many situations, the main question is: \emph{``How many events must we observe in order to detect a change in activity rate?"} Answering
 this question requires an understanding of the trade-offs between sampling time, activity rates, and signal size.  First, 
@@ -169,6 +182,7 @@ we will define signal in terms of the activity rate.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Activity Rate} 
+\label{rate}
 
 
 
@@ -232,6 +246,7 @@ uncertainty in the rate estimate and the size of the signal we can detect.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Signal Sensitivity}
+\label{sens}
 
 %%%%%
 % figure
@@ -288,6 +303,8 @@ must observe activities for a time, $T > T_l$, to achieve the desired signal sen
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Signal Sensitivity--Confidence Criteria} 
+\label{conf}
+
 
 We 
 \reversemarginpar\marginpar{\raggedleft
@@ -340,11 +357,13 @@ This criteria represents the trade-off between signal size and confidence.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Statistics of Time Series of Activities} 
+\label{time}
 
 In this section, we examine the underlying statistics in order to calculate confidence intervals and confidence levels.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Poisson Activity Probability} 
+\label{poisson}
 
 A
 \reversemarginpar\marginpar{\raggedleft
@@ -391,6 +410,7 @@ The expected value is $E[n]=n=rt$. The mean and variance of the Poisson distribu
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Poisson Confidence Intervals} 
+\label{conf}
 
 We 
 \reversemarginpar\marginpar{\raggedleft
@@ -470,6 +490,7 @@ the other parameters. Calculations for various design choices are illustrated in
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Confidence Interval Approximations and Bucketed Activity Counts}
+\label{confapprox}
 
 This section deals with approximations to the Poisson confidence interval for large numbers of activities. In
 addition, it contains some observations about bucketed activity counts. You can skip this section and
@@ -505,6 +526,7 @@ of average rate per bucket $\bar{r} = n/\Delta t$ adds another layer of variabil
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Summary of Parameters and Trade-Offs}
+\label{tradoffs}
 
 When 
 \reversemarginpar\marginpar{\raggedleft
@@ -591,6 +613,7 @@ Decrease signal uncertainty   (decrease $\eta$)  & increase $T$ (increase number
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Example Calculations} 
+\label{examples}
 
 Below are example calculations to make these ideas concrete and illustrate the use of the lookup tables.
 
