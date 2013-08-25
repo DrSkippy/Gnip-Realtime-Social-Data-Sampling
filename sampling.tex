@@ -5,9 +5,9 @@
 \usepackage[group-separator={,}]{siunitx}
 \usepackage{authblk}	% prettier multiple authors
 \usepackage{tikz}
-\usepackage{hyperref}
 
 \usepackage[margin=0.75cm]{caption}
+\usepackage{hyperref}
 
 % see http://texblog.org/2008/05/07/fwd-equal-cell-width-right-and-centre-aligned-content/
 \newcolumntype{x}[1]{%
@@ -30,7 +30,6 @@
 
 
 % keep this code at the top of the Introduction to ensure the figure stays on page 1
-%
 %%%%%
 % figure
 %
@@ -66,14 +65,14 @@ any two and then calculate the third.}
 
 In the world of real-time social data, we are typically observing a series of activities during some 
 period of time and are interested in identifying significant changes in the corresponding activity 
-rate. Such changes may be signals of emerging events or conversations and we would like to 
-quantify our ability to identify these kinds of signals. Figure~\ref{fig:tradeoff} illustrates 
-(schematically) the three main parameters involved in such calculations: signal size, total 
+rate. Such changes may be signals of emerging events or conversations. In this work, 
+we would like to quantify our ability to identify these kinds of signals. Figure~\ref{fig:tradeoff} 
+illustrates (schematically) the three main parameters involved in such calculations: signal size, total 
 activities, and confidence. The three parameters are not simultaneously independent; we can 
 choose or measure two of them -- possibly based on our particular use-case -- and they will 
 determine the third. If chosen as \emph{ad hoc} parameters, respectively, the signal 
 size is a difference in activity rates between two observation times, the number of total 
-activities is a function of the observation time and underlying instantaneous rate, and the 
+activities is a function of the observation time and underlying instantaneous activity rate, and the 
 confidence is a measure of statistical uncertainty in the activity rate e.g. a 95$\%$ 
 confidence interval.
 
@@ -85,9 +84,10 @@ situation.
 
 In Section~\ref{Qs}, we begin with examples of questions that may arise regarding 
 the sampling of real-time social data. In Section~\ref{filter}, we outline some of the mechanisms 
-by which a user might collect data from Gnip, specifically. In Sections~\ref{sig} and \ref{time}, we 
-outline the mathematical framework for calculations of activity rate and sampling statistics. Finally, 
-in Section~\ref{examples}, we work through some example calculations.
+by which a user can manage their data collection from Gnip, specifically. In Sections~\ref{params} and 
+\ref{time}, we outline some of the mathematical framework for calculations 
+of activity rate and sampling statistics. Finally, in Section~\ref{examples}, we work 
+through some example calculations.
 
 
 
@@ -95,20 +95,23 @@ in Section~\ref{examples}, we work through some example calculations.
 \subsection{Motivating Questions} 
 \label{Qs}
 
-Examples of typical questions regarding activity rate, signal and confidence level:
+Below are examples of questions regarding activity rate, signal, and confidence level that might 
+motivate the use of this whitepaper. The following Sections and example calculations will hopefully 
+help to answer these kinds of questions.
 
 \begin{itemize}
 	\item The activity rate has doubled from five counts to ten counts between two of my measurement 
 buckets. Is this change significant, or is this expected variation e.g. due to low-frequency events?
-	\item I want to minimize the total number activities that I consume. How can I use a sampling factor 
-and still detect a change of 2x in activity rate in 1 hour?
+	\item I want to minimize the total number activities that I consume (for reasons of cost, storage, etc). 
+How can I do this while still detecting a factor of two change in activity rate in 1 hour?
 	\item How long should I count activities to detect a change in signal of 5\%?
-	\item How do I describe the trade-off between signal latency (how long I have to wait) and rate uncertainty (how 
-	confidently I can estimate activity rate)?
-	\item How do I define confidence levels on rate estimates for an activity time series with only twenty events per day?
-	\item I plan to bucket the data in order to estimate activity rate, how big (i.e. what duration) should the buckets be? 
-	\item How many activities should I target to collect in each bucket in order to be have a 95\% confidence that my 
-	rate estimate is accurate for each bucket? 
+	\item How do I describe the trade-off between signal latency and activity rate uncertainty?
+	\item How do I define confidence levels on activity rate estimates for a time series with only twenty 
+events per day?
+	\item I plan to bucket the data in order to estimate activity rate, how big (i.e. what duration) should 
+the buckets be? 
+	\item How many activities should I target to collect in each bucket in order to be have a 95\% 
+confidence that my activity rate estimate is accurate for each bucket? 
 \end{itemize}
 
 
@@ -116,74 +119,83 @@ and still detect a change of 2x in activity rate in 1 hour?
 \subsection{Filtering and Sampling} 
 \label{filter}
 
-This section is clearly about PowerTrack and then the Sampling operator.
+% VERB TENSE SWITCHING BETWEEN FIRST PERSON PLURAL AND SECOND PERSON SINGULAR. CHOOSE ONE.
 
-In order to to control costs or to scale analysis, we may choose to sample a known fraction of the total social activities. This adds an
-additional piece of complexity to the relationship from Figure~\ref{fig:tradeoff}. Using a sampling filter effectively decreases the rate of activities. If you
-plan to use a sampling filter, it may be useful to explore sampling before moving to the core of the calculation.  
-If not, please skip to the next section.
+Rapid growth in the use of social media has led to a large amount of data becoming available 
+from many different sources; Twitter users alone produce approximately 500 million activities per day. 
+In addition to Twitter, Gnip provides access to data from Tumblr, Foursquare, WordPress, Disqus, 
+IntenseDebate, StockTwits, Estimize, Newsgator, as well as easy access to public API data from more than a dozen 
+additional sources. In order to make this large volume of data more manageable, Gnip customers can take 
+advantage of two approaches to sample from our firehoses, reduce overall data consumption, and focus 
+on activities of interest: PowerTrack filtering\footnote{e.g. \url{http://gnip.com/twitter/power-track/ } } 
+and sampling\footnote{Twitter's filtered, rate-limited 1\% streaming API provides a non-deterministic 
+combination that is not suitable for many analytic tasks.  See \cite{Morstatter:2013}.}. 
 
-There are two approaches to sampling a firehose of social data. Both involve reducing the number of activities in the 
-real-time stream to a manageable size for analysis. \footnote{Twitter's filtered, rate-limited 1\% streaming API provides a 
-non-deterministic combination that is not suitable for many analytic tasks.  See \cite{Morstatter:2013}.} 
+% powertrack
+Gnip's PowerTrack operators allow for filtering of a publisher firehose on keywords or fields that are 
+relevant to the topic in which you are interested. For example, if you are interested in tracking the 
+Super Bowl (the American football event), you might start with a broad stream defined by the 
+keywords ``superbowl" ``super~bowl" 
+and ``contains:xlvii", the latter being a substring match of the Roman numeral of the Super Bowl as 
+might be seen in hashtags or short links. This should limit the social data stream to activities that are 
+more closely related to the actual Super Bowl event. 
 
-The first step is to use keyword filtering.  Gnip provides filtering on keywords to select only the portion of the stream
-that is relevant to the topic you want to analyze. For example, if you are interested in tracking the Super Bowl, you 
-might start with a broad stream defined by the keywords ``superbowl" ``super~bowl" and ``contains:xlvii", the 
-latter being the Roman numeral of the Super Bowl as might be seen in hashtags or short links. This would limit the 
-social data stream to activities related to the Super Bowl.
-
-In the case of a major event like the Super Bowl, the keyword-filtered stream may represent a very large number
-of activities.  In this case, a second step might be to filter this stream to a known fraction of the total firehose. For 
-example, using Gnip's sampling operator, we can reduce the stream to only fraction, e.g. 12\%, of the activities. 
-The corresponding Powertrack rule would become  ``(super bowl OR superbowl) sample:12''.
-
-It is useful to know how Gnip's sampling algorithms work to inform sampling decisions.  Sampling is available on
-Gnip's premium streams including Tumblr, Twitter, WordPress and Disqus. Some key features of Gnip sampling:
+% sampling
+In the case of a major event like the Super Bowl, the keyword-filtered firehose may still represent a 
+very large number of activities -- possibly more than we can store or process in real-time, or more than 
+our budget allows. In this case, adding an additional sampling operator will reduce the firehose to a 
+known fraction, upstream of any PowerTrack filtering. For example, in order to apply our above Super 
+Bowl PowerTrack rules to a 12\% sample of the firehose, we would use a rule such as: 
+``(super~bowl~OR~superbowl~OR~contains:xlvii)~sample:12''. Using a sampling filter effectively decreases 
+the number and rate of activities. Below are some key features of the sampling operator:
 
 \begin{enumerate}
 	\item 1\% resolution
-	\item Stable sampling rate (short time resolution)
-	\item The sample is deterministic and returns the same activities for near-rule matches.  For example, this means
-	that you will get the same Tweets for matches to the ``super bowl'' portion of the rules ``super bowl sample:12'' 
-	and ``(super bowl OR superbowl) sample:12''
-	\item Sampling is progressively inclusive (i.e. a 2\% stream (e.g. ``sample:2'') includes the exact activities from
-	the 1\% stream plus an 
-	additional 1\%,  and so on)
-	\item Activities are first selected from the firehose to reach the desired sampling rate and then filtered by keywords 
+	\item Stable sampling rate (even on small time scales)
+	\item Deterministic sampling returns the same activities for near-rule matches.  That is, the same 
+Tweets are returned for matches to the ``super bowl'' portion of the rules ``super~bowl~sample:12'' and 
+``(super bowl~OR~superbowl)~sample:12''.
+	\item Progressively inclusive sampling. That is, a 2\% stream e.g. ``sample:2'' includes the exact 
+activities from	the 1\% stream, plus an additional 1\%.
+	\item Sampling operator precedes PowerTrack filtering. That is, activities are first selected 
+from the full firehose to reach the desired sampling rate, then filtered by keywords. 
+PowerTrack filtering is thus applied to a subset of activities that is still representative 
+of the full firehose.
 \end{enumerate}
 
-What happens when we look at the combination of filtering with sampling?  Continuing with our Super Bowl example, 
-assume our term filtering rules return $y=5\%$ of the stream. Assume further that we sample $x=12\%$ sample of 
-the firehose activities and the total activities for the day are $N_f=500$M. Filtering and sampling will leave us with 
-approximately,
+
+% combining sampling and powertrack
+Consider the use of both the sampling operator and PowerTrack filtering in the case of our Super Bowl 
+example. Assume our PowerTrack filtering rules would return $y=5\%$ of the full firehose over the 
+course of a day. Assume further that we choose to select an $x=12\%$ sample of firehose activities 
+to which our PowerTrack filter is applied. Given that the total number of firehose activities (at the time 
+of writing) was about $N_{fh}=500$ M per day, our filtering and sampling will leave us with approximately
 
 \begin{equation}
     \label{eq:sbsample}
-    N_{observed} = x y N_{firehose}= 0.12 (0.05) 500 \textrm{ M} = 3 \textrm{ M}
+    N_{observed} = x y N_{fh}= 0.12 (0.05) 500 \textrm{ M} = 3 \textrm{ M}
 \end{equation}
-activities in a day. 
+activities in this day. 
 
-Once you understand this order, it is natural to ask why Gnip does not filter first, then sample. The difference is not
-in the final outcome, but how long you have to wait for a reliable estimate of rate. If Gnip were to filter on keywords
-first, Equation~\ref{eq:sbsample} would also be a reasonable estimate of $N_{observed}$ on the time scale of the 
-sampling calculation. However, this process would require abandoning properties 3 and 4 in the list above. Both attributes
-are desirable for most social data projects. Doing the sample first, followed by the keyword filter, gives a slightly
-more complex behavior because it requires us to deal the effects of statistical variations in the short term.
+The order of sampling and filtering is important to maintaining the deterministic nature of subsequently 
+filtered activities. Additionally, filtering prior to sampling would likely increase the duration of time 
+needed to obtain an estimate of true activity rate, and would also inhibit any experiments that attempt 
+to quantify any topics as fractional components of the full firehose.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Signal} 
-\label{sig}
+\section{Sampling Parameters}  
+\label{params}
 
-In many situations, the main question is: \emph{``How many events must we observe in order to detect a change in activity rate?"} Answering
-this question requires an understanding of the trade-offs between sampling time, activity rates, and signal size.  First, 
-we will define signal in terms of the activity rate.
+In many situations, a simple question is: 
+\emph{``How many events must we observe in order to detect a change in activity rate?"} 
+Answering this question requires an understanding of the trade-offs between sampling time, 
+activity rate, and signal size.  
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Activity Rate} 
 \label{rate}
-
 
 
 \medskip
@@ -211,15 +223,17 @@ The\reversemarginpar\marginpar{\raggedleft
 %
 %
 %%%%%
-} average activity rate per time bucket is calculated by,
+} average activity rate per time bucket is calculated as
 
 \begin{equation}
     \label{eq:rateEst}
-    \bar{r} = \frac{N}{T}
+    \bar{r} = \frac{N}{T},
 \end{equation}
-where $N$ is the number of activities per time bucket. Due to the statistical
-variations in the number of activities in any given time interval, uncertainty exists in our estimate of average rate. 
-The more activities we count, the more certain our estimate as shown in Figure~\ref{fig:confidence}.
+where $N$ is the number of activities per time bucket of duration $T$. Due to the statistical
+variations in the number of activities in any given time interval, there exists an uncertainty in our 
+estimate this average rate. As shown in Figure~\ref{fig:confidence}, the more activities we count, 
+the better our estimate of the rate.
+
 
 %%%%%
 % figure
@@ -228,20 +242,19 @@ The more activities we count, the more certain our estimate as shown in Figure~\
 	\begin{center}
 		\includegraphics[width=3.5in]{./imgs/fig2.pdf}
 	\end{center}
-	\caption{Uncertainty in the estimated rate of activities goes down as we wait longer in order to count more activities.  The green line
-represents the rate while the blue lines show the upper and lower 95\% confidence band. }
+	\caption{The 95\% confidence interval (blue) representing the uncertainty in the estimated activity rate (green) decreases in size as we observe additional activities. }
     	\label{fig:confidence}
 \end{figure}
 %
 %
 %%%%%
 
-Below, we will determine how many activities $N$ we need to count to estimate the average activity rate, $\bar{r}$, to a desired level
-of confidence (e.g. 95\%). In other words, we can ask: given a level of confidence, how wide is the range of uncertainty
-about the rate estimate?
-
-The details of calculating the confidence level can be found in the next section.  Next, we explore the connection between
-uncertainty in the rate estimate and the size of the signal we can detect.
+%Below, we will determine how many activities $N$ we need to count to estimate the average activity rate, $\bar{r}$, to a desired level
+%of confidence (e.g. 95\%). In other words, we can ask: given a level of confidence, how wide is the range of uncertainty
+%about the rate estimate?
+%
+%The details of calculating the confidence level can be found in the next section.  Next, we explore the connection between
+%uncertainty in the rate estimate and the size of the signal we can detect.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -262,7 +275,8 @@ uncertainty in the rate estimate and the size of the signal we can detect.
 %
 %%%%%
 
-When
+%When
+Higher
 \reversemarginpar\marginpar{\raggedleft
 %%%%%
 % figure  ICON VIEW  SECTION 2.2
@@ -285,17 +299,28 @@ When
 %
 %%%%%
 }
-  When activity rates are high, rate estimates will be more certain; when low, rate estimates will be less certain. High uncertainty
-in the rate estimates may hide the small changes between the bucketed activity rates that we wish to identify.  The variation in activity rate due to the statistics
-associated with infrequent events must be smaller than the signal we want to detect. Therefore, we observe
-a valid signal in a time series when the activity rate between buckets has changed by more than the rate signal sensitivity, $\Delta r$, defined as,
+underlying activity rates lead naturally to more certain estimates of said rate than lower ones. 
+In the case of a low activity rate, it is possible that small changes in our estimated rate 
+(calculated from one bucket to the next) will be inconclusive; the statistics of infrequent events 
+require some amount of variation. In order to declare a valid signal, the variation due to e.g. 
+infrequent events must be smaller than the thing we define as `signal.' Therefore, we observe
+a valid signal in a time series when the activity rate between buckets has changed by 
+more than the rate signal sensitivity, $\Delta r$, defined as
+
+% not only does \Delta r have to be smaller than r_f - r_i, but the chosen confidence intervals have to be non-overlapping
 %%Consideration: when we talk about the change in activity rate, we're talking about a change between buckets; however, we do not specify which rate signal sensitivity we're using to compare. For two buckets, we see two singnal sensitivities. Options:
 %%1.) We could average the two signal sensativities to compare with $\Delta r$
 %%2.) We could de‎fine $\Delta r$ as the distance between uncertainty bounds between buckets and still continue to use the definition of signal as $\delta r$<<$\Delta r$.  
+
+
 \begin{equation}
     \label{eq:signal}
     | r(t_f) - r(t_i) | \geq \Delta r.
 \end{equation}
+
+% 2013-08-24, 22:01
+\%
+
 
 Each bucket size is defined by the difference between the variables $t_f$ and $t_i$ as they represent the final and initial times at which each activity rate is measured. The associated time 
 scale of the change, $T_l = t_f - t_i$, is the signal latency.  This definition implies that we 
@@ -330,19 +355,26 @@ We
 %%%%%
 }
 will be estimating the activity rate in Equation~\ref{eq:rateEst} by counting activities for a determined time period.  The
-number of activities in any given period will be distributed about the long term mean. As we count more activities, our
+number of activities in any given period will be distributed about the long term mean. 
+% ^ assumes some sort of steady-state process?
+As we count more activities, our
 estimate of rate will converge toward the true value.  If we count thousands of activities per minute, our confidence of the estimate
 of activity rate will be very high after a short time.  For rare activities, we will have to count longer before we have
 a high level of confidence in our rate estimate.
 
+% this section is not clear to me (jm), our 'confidence' has an associated (user-chosen) interval size. why would
+%	we establish a 'rough criteria' for it?
 Referring to the signal sensitivity definition in Equation~\ref{eq:signal}, we can establish a rough criteria for confidence
 in terms of signal uncertainty, $\delta r$:
+%why is this being divided by r_max? and why bother if both sides are? what is r_max? 'the lower rate estimate'?
 
 \begin{equation}
     \label{eq:criteria}
     \frac{\delta r}{\bar{r}_{max}} << \frac{\Delta r}{\bar{r}_{max}}.
 \end{equation}
 where $\bar{r}_{max}$ will be the lower rate estimate (initial if detecting rising activity rate but final if detecting falling activity rate).
+
+% it has to be \delta r at a particular point, right? \delta r changes as the rate changes (as shown in the figure)
 
 To help quantify this inequality, we introduce a criteria factor, $\eta$, that tells how much larger than the relative
 uncertainty the change in rate must be.
@@ -576,7 +608,7 @@ Signal latency & $T_l$ & Time required to detect $\Delta r$  \\
 Signal confidence & $\eta$ & Rate signal criteria multiplier factor (i.e. $\eta = 3$ means relative signal is $3 \times$ random variations in sample) \\
 Bucket & $\Delta t$ & Predetermined time scale for estimating rate (probably already determined in your system)\\
 Number of buckets & $k=T/\Delta t$ & Duration expressed in number of  buckets \\
-Sampling rate & $S$	& Powertrack sampling operator (e.g. ``sample:$S$'') \\
+Sampling rate & $S$	& PowerTrack sampling operator (e.g. ``sample:$S$'') \\
 \hline
 \end{tabular}
 \caption{Summary of model parameters.}
@@ -594,15 +626,15 @@ Minimize activities (i.e. decrease $N$)  & increase $\Delta r$ (decrease signal 
 \hline	
 Increase signal sensitivity (i.e. decrease $\Delta r$) & increase $T$ (increase number of buckets ($k$); 
 	increase bucket size ($\Delta t$) ); increase activity rate ($r$) by broadening filter or increase 
-	Powertrack sampling  & See example in Section \ref{ex:3} that illustrates sensitivity with high rate\\
+	PowerTrack sampling  & See example in Section \ref{ex:3} that illustrates sensitivity with high rate\\
 \hline
 Decrease signal latency  (i.e. decrease $T_l$)   & decrease signal sensitivity $\Delta r$;
 	decrease confidence factor ($\alpha$); increase activity rate ($r$) by broadening filter 
-	or increase Powertrack sampling  & See example in Section \ref{ex:2} that illustrates long signal latency\\
+	or increase PowerTrack sampling  & See example in Section \ref{ex:2} that illustrates long signal latency\\
 \hline
 Decrease signal uncertainty   (decrease $\eta$)  & increase $T$ (increase number of buckets ($k$); or 
 	increase bucket size ($\Delta t$) ); increase activity counts (increase $N$, $r$) by broadening 
-	filter; increase Powertrack sampling & See example in Section \ref{ex:2} that illustrates a calculation
+	filter; increase PowerTrack sampling & See example in Section \ref{ex:2} that illustrates a calculation
 	for small $\eta \le 1$\\
 \hline
 \end{tabular}
@@ -618,7 +650,7 @@ Decrease signal uncertainty   (decrease $\eta$)  & increase $T$ (increase number
 Below are example calculations to make these ideas concrete and illustrate the use of the lookup tables.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Estimate the Optimal Powertrack Sampling Operator Value} 
+\subsection{Estimate the Optimal PowerTrack Sampling Operator Value} 
 \label{ex:1}
 
 The sampling operator, $S$, is the percent sample size extracted from the firehose.  Selecting $S$ is a process 
@@ -687,7 +719,7 @@ must observe 10 minutes of activities to detect our desired signal.
 %
 %Choosing $\eta=1$, we see in Table \ref{tab:conf} that for $\Delta r = \frac{10}{T}$, we must have $N\geq7$ causing $I > 10\eta$ in order to observe our signal.  Notice that $N_t=7$ is the point after which we could first observe a signal.  Thus, we say that $T_{l}>T_{N_t}$ defines the time that it takes to observe a signal, which means that signal latency is greater than the amount of time that it takes to collect $N_t$ activities.  Takes 2 periods to get the calculation> have to calculate the rate in the first then the second and compare.
 %
-%We can decrease $T_{l}$ in several ways.  First, we could try improving the rate at which we achieve $N_t$ by  increasing our Powertrack sampling.  Otherwise, we could decrease $T_{l}$ as we narrow $I$ through a lower confidence level $(1-\alpha)$.  The lower confidence level tightens $I$ around smaller $N$ allowing the potential signal to become clearer faster, but this goal is accomplished at the cost of decreased confidence.  Another basic option is to simply choose a smaller (larger?) signal size such as $\Delta r = \frac{5}{T}$ from our previous example.  All of these strategies would decrease $T_{l}$.
+%We can decrease $T_{l}$ in several ways.  First, we could try improving the rate at which we achieve $N_t$ by  increasing our PowerTrack sampling.  Otherwise, we could decrease $T_{l}$ as we narrow $I$ through a lower confidence level $(1-\alpha)$.  The lower confidence level tightens $I$ around smaller $N$ allowing the potential signal to become clearer faster, but this goal is accomplished at the cost of decreased confidence.  Another basic option is to simply choose a smaller (larger?) signal size such as $\Delta r = \frac{5}{T}$ from our previous example.  All of these strategies would decrease $T_{l}$.
 
 
 
