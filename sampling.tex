@@ -47,7 +47,7 @@
 \draw [green, ultra thick] (3,0) circle [radius=0.5];
 % labels
 \node[align=center, below] at (-0.5,-0.5){activities\\($N=rate \times time$)};
-\node[align=center, above] at (1.5,3.098){signal\\($\Delta r=rate_{final}-rate_{init}$)};
+\node[align=center, above] at (1.5,3.098){signal\\($\Delta r=|rate_f-rate_i|$)};
 \node[align=center, below] at (3.5,-0.5){confidence\\($\delta_{rate,N}$)};
 \end{tikzpicture}
 \end{center}
@@ -127,7 +127,7 @@ In addition to Twitter, Gnip provides access to data from Tumblr, Foursquare, Wo
 IntenseDebate, StockTwits, Estimize, Newsgator, as well as easy access to public API data from more than a dozen 
 additional sources. In order to make this large volume of data more manageable, Gnip customers can take 
 advantage of two approaches to sample from our firehoses, reduce overall data consumption, and focus 
-on activities of interest: PowerTrack filtering\footnote{e.g. \url{http://gnip.com/twitter/power-track/ } } 
+on activities of interest: PowerTrack filtering\footnote{e.g. \url{http://gnip.com/twitter/power-track/} } 
 and sampling\footnote{Twitter's filtered, rate-limited 1\% streaming API provides a non-deterministic 
 combination that is not suitable for many analytic tasks.  See \cite{Morstatter:2013}.}. 
 
@@ -143,11 +143,12 @@ more closely related to the actual Super Bowl event.
 % sampling
 In the case of a major event like the Super Bowl, the keyword-filtered firehose may still represent a 
 very large number of activities -- possibly more than we can store or process in real-time, or more than 
-our budget allows. In this case, adding an additional sampling operator will reduce the firehose to a 
-known fraction, upstream of any PowerTrack filtering. For example, in order to apply our above Super 
+our budget allows. In this case, adding an additional sampling operator will reduce the delivered data 
+to a known fraction of the firehose, upstream of any PowerTrack filtering. 
+For example, in order to apply our above Super 
 Bowl PowerTrack rules to a 12\% sample of the firehose, we would use a rule such as: 
 ``(super~bowl~OR~superbowl~OR~contains:xlvii)~sample:12''. Using a sampling filter effectively decreases 
-the number and rate of activities. Below are some key features of the sampling operator:
+the number and rate of delivered activities. Some key features of the sampling operator:
 
 \begin{enumerate}
 	\item 1\% resolution
@@ -164,12 +165,12 @@ of the full firehose.
 \end{enumerate}
 
 
-% combining sampling and powertrack
-Consider the use of both the sampling operator and PowerTrack filtering in the case of our Super Bowl 
-example. Assume our PowerTrack filtering rules would return $y=5\%$ of the full firehose over the 
+% combining sampling and powertrack, example
+Consider the use of both the sampling operator and PowerTrack filtering in the case of this (fictitious) 
+Super Bowl example. Assume our PowerTrack filtering rules would return $y=5\%$ of the full firehose over the 
 course of a day. Assume further that we choose to select an $x=12\%$ sample of firehose activities 
 to which our PowerTrack filter is applied. Given that the total number of firehose activities (at the time 
-of writing) was about $N_{fh}=500$ M per day, our filtering and sampling will leave us with approximately
+of writing) is about $N_{fh}=500$ M per day, our filtering and sampling will leave us with approximately
 
 \begin{equation}
     \label{eq:sbsample}
@@ -177,10 +178,10 @@ of writing) was about $N_{fh}=500$ M per day, our filtering and sampling will le
 \end{equation}
 activities in this day. 
 
-The order of sampling and filtering is important to maintaining the deterministic nature of subsequently 
+The order of sampling and filtering is critical to maintaining the deterministic nature of subsequently 
 filtered activities. Additionally, filtering prior to sampling would likely increase the duration of time 
 needed to obtain an estimate of true activity rate, and would also inhibit any experiments that attempt 
-to quantify any topics as fractional components of the full firehose.
+to quantify a topic as a fractional component of the full firehose.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -223,16 +224,18 @@ The\reversemarginpar\marginpar{\raggedleft
 %
 %
 %%%%%
-} average activity rate per time bucket is calculated as
+} average activity rate in a time bucket is calculated as
 
 \begin{equation}
     \label{eq:rateEst}
     \bar{r} = \frac{N}{T},
 \end{equation}
-where $N$ is the number of activities per time bucket of duration $T$. Due to the statistical
+where $N$ is the number of activities in a bucket of time length $T$. Due to the statistical
 variations in the number of activities in any given time interval, there exists an uncertainty in our 
-estimate this average rate. As shown in Figure~\ref{fig:confidence}, the more activities we count, 
-the better our estimate of the rate.
+estimate of this average rate. Figure~\ref{fig:confidence} illustrates this idea that as we continue to 
+observe additional activities, our confidence in the underlying activity rate grows; the bounds shown 
+are those of a 95\% confidence interval.
+
 
 
 %%%%%
@@ -300,14 +303,15 @@ Higher
 %%%%%
 }
 underlying activity rates lead naturally to more certain estimates of said rate than lower ones. 
-In the case of a low activity rate, it is possible that small changes in our estimated rate 
+For a low activity rate, it is possible that small changes in our estimated rate 
 (calculated from one bucket to the next) will be inconclusive; the statistics of infrequent events 
-require some amount of variation. In order to declare a valid signal, the variation due to e.g. 
+lead to some amount of variation. In order to declare a valid signal, the variation due to e.g. 
 infrequent events must be smaller than the thing we define as `signal.' Therefore, we observe
 a valid signal in a time series when the activity rate between buckets has changed by 
 more than the rate signal sensitivity, $\Delta r$, defined as
 
-% not only does \Delta r have to be smaller than r_f - r_i, but the chosen confidence intervals have to be non-overlapping
+% <not only does \Delta r have to be smaller than r_f - r_i, but the chosen confidence intervals have to be non-overlapping (JM) >
+
 %%Consideration: when we talk about the change in activity rate, we're talking about a change between buckets; however, we do not specify which rate signal sensitivity we're using to compare. For two buckets, we see two singnal sensitivities. Options:
 %%1.) We could average the two signal sensativities to compare with $\Delta r$
 %%2.) We could de‎fine $\Delta r$ as the distance between uncertainty bounds between buckets and still continue to use the definition of signal as $\delta r$<<$\Delta r$.  
@@ -318,20 +322,18 @@ more than the rate signal sensitivity, $\Delta r$, defined as
     | r(t_f) - r(t_i) | \geq \Delta r.
 \end{equation}
 
-% 2013-08-24, 22:01
-\%
+Each bucket size is defined by the difference between the variables $t_f$ and $t_i$, the times at which 
+the activity rate is measured. The associated time duration $T_l = t_f - t_i$ is the signal latency.  
 
-
-Each bucket size is defined by the difference between the variables $t_f$ and $t_i$ as they represent the final and initial times at which each activity rate is measured. The associated time 
-scale of the change, $T_l = t_f - t_i$, is the signal latency.  This definition implies that we 
-must observe activities for a time, $T > T_l$, to achieve the desired signal sensitivity, $\Delta r$.
+% < not sure the sentence below says anything; obviously we have to observe at least one bucket before we can say anything. (JM) >
+%This definition implies that we must observe activities for a time $T > T_l$ to achieve the desired signal sensitivity, $\Delta r$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Signal Sensitivity--Confidence Criteria} 
 \label{conf}
 
 
-We 
+If  
 \reversemarginpar\marginpar{\raggedleft
 %%%%%
 % figure  ICON VIEW SECTION 2.3
@@ -353,10 +355,22 @@ We
 %
 %
 %%%%%
-}
-will be estimating the activity rate in Equation~\ref{eq:rateEst} by counting activities for a determined time period.  The
-number of activities in any given period will be distributed about the long term mean. 
+} we assume we are interested in estimating the activity rate (c.f. Equation~\ref{eq:rateEst}) of some form of 
+steady-state process, the observed activities in any given period will be distributed about the 
+long term mean. 
+
+
+
+
+\% 2013-08-30 
+
+We will be estimating the activity rate in  by counting activities for a determined time period.  The
+number of activities in any given period will be 
 % ^ assumes some sort of steady-state process?
+
+
+
+
 As we count more activities, our
 estimate of rate will converge toward the true value.  If we count thousands of activities per minute, our confidence of the estimate
 of activity rate will be very high after a short time.  For rare activities, we will have to count longer before we have
