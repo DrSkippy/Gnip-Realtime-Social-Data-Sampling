@@ -66,6 +66,9 @@ any two and then calculate the third.}
 In the world of real-time social data, we are typically observing a series of activities during some 
 period of time and are interested in identifying significant changes in the corresponding activity 
 rate. Such changes may be signals of emerging events or conversations. In this work, 
+we hope to assist current and potential Gnip customers in 
+% thesis statement: help our customers better understand a) how to use PT b) how to set up their measurements
+
 we would like to quantify our ability to identify these kinds of signals. Figure~\ref{fig:tradeoff} 
 illustrates (schematically) the three main parameters involved in such calculations: signal size, total 
 activities, and confidence. The three parameters are not simultaneously independent; we can 
@@ -245,7 +248,8 @@ are those of a 95\% confidence interval.
 	\begin{center}
 		\includegraphics[width=3.5in]{./imgs/fig2.pdf}
 	\end{center}
-	\caption{The 95\% confidence interval (blue) representing the uncertainty in the estimated activity rate (green) decreases in size as we observe additional activities. }
+	\caption{The 95\% confidence interval (blue) representing the uncertainty in the estimated activity 
+		rate (green) decreases in size as we observe additional activities. }
     	\label{fig:confidence}
 \end{figure}
 %
@@ -271,7 +275,11 @@ are those of a 95\% confidence interval.
     \centering
     \includegraphics[width=3.5in]{./imgs/fig3a.pdf}
     \includegraphics[width=3.5in]{./imgs/fig3b.pdf}
-        \caption{A change in rate from the start time (left) to the end time (right) can be detected when the change in rate is equal to the uncertainty in the rate estimates (shown in the upper image). When the uncertainty is large, the signal is hidden in the noise (lower image).}
+        \caption{A change in rate from the start time (left) to the end time (right) is established when the 
+		change is equal to -- or greater than -- the uncertainty in the rate earlier estimate. The upper 
+		image shows the point at which we cross this threshold. Before this criteria is met, the 
+		change in rate remains within the uncertainty and observation of a signal is 
+		indeterminate. The lower image shows this situation.}
     \label{fig:signal}
 \end{figure}
 %
@@ -355,32 +363,15 @@ If
 %
 %
 %%%%%
-} we assume we are interested in estimating the activity rate (c.f. Equation~\ref{eq:rateEst}) of some form of 
-steady-state process, the observed activities in any given period will be distributed about the 
-long term mean. 
+} we assume we are interested in estimating the activity rate (c.f. Equation~\ref{eq:rateEst}) of 
+some form of steady-state process, the observed activities in any given period will be distributed 
+about the long term mean. As for a typical Poisson process (discussed further in 
+Section~\ref{poisson}), the span of fixed-percentage confidence intervals decreases with an 
+increasing number of observed activities, and as mentioned in Section~\ref{sens}, this uncertainty 
+also inversely scales with the underlying activity rate.
 
-
-
-
-\% 2013-08-30 
-
-We will be estimating the activity rate in  by counting activities for a determined time period.  The
-number of activities in any given period will be 
-% ^ assumes some sort of steady-state process?
-
-
-
-
-As we count more activities, our
-estimate of rate will converge toward the true value.  If we count thousands of activities per minute, our confidence of the estimate
-of activity rate will be very high after a short time.  For rare activities, we will have to count longer before we have
-a high level of confidence in our rate estimate.
-
-% this section is not clear to me (jm), our 'confidence' has an associated (user-chosen) interval size. why would
-%	we establish a 'rough criteria' for it?
-Referring to the signal sensitivity definition in Equation~\ref{eq:signal}, we can establish a rough criteria for confidence
-in terms of signal uncertainty, $\delta r$:
-%why is this being divided by r_max? and why bother if both sides are? what is r_max? 'the lower rate estimate'?
+Referring to the definition in Equation~\ref{eq:signal}, we can establish a rough criteria for 
+confidence in terms of the signal uncertainty, $\delta r$:
 
 \begin{equation}
     \label{eq:criteria}
@@ -388,18 +379,34 @@ in terms of signal uncertainty, $\delta r$:
 \end{equation}
 where $\bar{r}_{max}$ will be the lower rate estimate (initial if detecting rising activity rate but final if detecting falling activity rate).
 
-% it has to be \delta r at a particular point, right? \delta r changes as the rate changes (as shown in the figure)
+%%proposed replacement for eq:criteria (^) 
+%\begin{equation}
+%    \label{eq:criteria}
+%    \delta r << \frac{\Delta r}{\bar{r}_{low}},
+%\end{equation}
+%where $\bar{r}_{low}$ will be the lower of the activity rate estimates between the two observations.
 
-To help quantify this inequality, we introduce a criteria factor, $\eta$, that tells how much larger than the relative
-uncertainty the change in rate must be.
+To make this inequality a bit more concrete, we can introduce a criteria factor, $\eta$, which 
+determines the relative size difference between our observed rate change (i.e. potential signal) 
+and the uncertainty.
 
 \begin{equation}
     \label{eq:criteriaParam}
     \frac{\delta r}{\bar{r}_{max}} = \frac{\eta \Delta r}{\bar{r}_{max}}
 \end{equation}
-where $\eta \ge 1$.
 
-This criteria represents the trade-off between signal size and confidence.
+%% similar replacement, as above
+%\begin{equation}
+%    \label{eq:criteriaParam}
+%    \delta r = \frac{\eta \Delta r}{\bar{r}_{low}}
+%\end{equation}
+%where $\eta \ge 1$.
+
+Flexibility in the choice of $\eta$ allows us to prioritize high-certainty classification of signal 
+(larger separation of observed signal and uncertainty bounds, typically requires longer observation 
+time), or lower-certainty classification (smaller signal-uncertainty separation, typically faster).
+
+\% 2013-09-03 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Statistics of Time Series of Activities} 
