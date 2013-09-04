@@ -370,14 +370,15 @@ Section~\ref{poisson}), the span of fixed-percentage confidence intervals decrea
 increasing number of observed activities, and as mentioned in Section~\ref{sens}, this uncertainty 
 also inversely scales with the underlying activity rate.
 
-Referring to the definition in Equation~\ref{eq:signal}, we can establish a rough criteria for 
+Referring to the signal definition in Equation~\ref{eq:signal}, we can establish a rough criteria for 
 confidence in terms of the signal uncertainty, $\delta r$:
 
 \begin{equation}
     \label{eq:criteria}
     \frac{\delta r}{\bar{r}_{max}} << \frac{\Delta r}{\bar{r}_{max}}.
 \end{equation}
-where $\bar{r}_{max}$ will be the lower rate estimate (initial if detecting rising activity rate but final if detecting falling activity rate).
+where $\bar{r}_{max}$ will be the lower rate estimate (initial if detecting rising activity rate 
+but final if detecting falling activity rate).
 
 %%proposed replacement for eq:criteria (^) 
 %\begin{equation}
@@ -403,22 +404,26 @@ and the uncertainty.
 %where $\eta \ge 1$.
 
 Flexibility in the choice of $\eta$ allows us to prioritize high-certainty classification of signal 
-(larger separation of observed signal and uncertainty bounds, typically requires longer observation 
-time), or lower-certainty classification (smaller signal-uncertainty separation, typically faster).
+(larger $\eta$, greater separation of observed signal and uncertainty bounds, 
+typically requiring longer observation time), or lower-certainty classification (smaller $\eta$, 
+less signal-uncertainty separation, typically requiring shorter observation time).
 
-\% 2013-09-03 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Statistics of Time Series of Activities} 
 \label{time}
 
-In this section, we examine the underlying statistics in order to calculate confidence intervals and confidence levels.
+In this section, we explore some of the underlying mathematics and statistics involved in 
+activity rate estimation. The goal is to demonstrate a method for calculating confidence 
+intervals for rate estimates, and how to consider the available tradeoffs inherent in such 
+a measurement.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Poisson Activity Probability} 
 \label{poisson}
 
-A
+Because 
 \reversemarginpar\marginpar{\raggedleft
 %%%%%
 % figure  ICON VIEW  SECTION 2.1 and 3.1
@@ -444,14 +449,20 @@ A
 %
 %%%%%
 }
-model of counts of rare activities is that the inter-arrival times are exponentially distributed, 
+social activities (e.g. Tweets) are timed approximately randomly and have inter-activity 
+times which follow an exponential distribution, we can classify such a process as a Poisson 
+Process. As such, we can model the probability of observing an activity as 
 
 \begin{equation}
     \label{eq:tbe}
     p_{activity}(t) = r e^{-r t}
 \end{equation}
 
-This assumption leads to a Poisson distribution of activity counts over time.
+
+
+\% 2013-09-04 
+
+
 
 The probability of observing $n$ activities in time $t$ when the activity rate is $r$ is given by,
 \begin{equation}
