@@ -388,8 +388,8 @@ confidence interval increases with more activities, the relative interval size d
 % can make this ^ more clear the relative interval size is discussed in a later section
 
 To make this inequality a bit more concrete, we can introduce a criteria factor, $\eta$, which 
-determines the relative size difference between our observed rate change (i.e. potential signal) 
-and the uncertainty,
+specifies the relative size difference between our observed rate change (i.e. potential signal) 
+and the relative uncertainty interval,
 
 %\begin{equation}
 %    \label{eq:criteriaParam}
@@ -399,11 +399,13 @@ and the uncertainty,
 % similar replacement, as above
 \begin{equation}
     \label{eq:criteriaParam}
-    \frac{\delta r}{\bar{r}_{low}} = \frac{\eta \Delta r}{\bar{r}_{low}},
+    \frac{\delta r}{\bar{r}_{low}} \eta  = \frac{\Delta r}{\bar{r}_{low}},
 \end{equation}
 where $\eta \ge 1$.
 
-Flexibility in the choice of $\eta$ allows us to prioritize high-certainty classification of signal 
+We will sometimes refer to the right-hand side of Equation~\ref{eq:criteriaParam} as our `signal 
+sensitivity', and the left-hand side as a `relative (confidence) interval size'. Flexibility in the 
+choice of $\eta$ allows us to prioritize high-certainty classification of signal 
 (larger $\eta$, greater separation of observed signal and uncertainty bounds, 
 typically requiring longer observation time), or lower-certainty classification (smaller $\eta$, 
 less signal-uncertainty separation, typically requiring shorter observation time).
@@ -514,7 +516,7 @@ $\alpha=0.1$. Example $90\%$ confidence intervals and their relative sizes are s
 Table~\ref{tab:conf}.
 
 To determine the parameters satisfying our data collection goals, we can find the value of $n$ for 
-whichthe time interval and confidence level match our requirements for signal detection.  
+which the time interval and confidence level match our requirements for signal detection.  
 That is, we can now calculate any one of signal sensitivity, signal latency, activity rate, or confidence 
 level given the other parameters. Example calculations for various design choices are illustrated in the 
 last section of this paper.
@@ -553,9 +555,9 @@ $n$ & Interval Bounds & Interval Size ($\delta n$) & Relative Interval\\
 750 &  705.5, 796.6  & 91.11 & 0.1215\tabularnewline 
 1000 &  948.6,  1054.  & 105.0 & 0.1050\tabularnewline 
 \end{tabular}
-\caption{Confidence intervals around the number of events counted, $n$, in unit time $T$.  
-Rate interval size is $\delta r = \delta n/T$. Note that while the absolute size of the interval 
-increases, the relative interval uncertainty decreases.}
+\caption{$90\%$ ($\alpha$ = 0.1) confidence intervals around the number of events counted, 
+$n$, in unit time $T$. Rate interval size is $\delta r = \delta n/T$. Note that while the 
+absolute size of the interval increases, the relative interval uncertainty decreases.}
 \label{tab:conf}
 \end{table}
 %
@@ -636,7 +638,7 @@ we observe for a longer period of time to establish the existance of a signal at
 level of confidence. Along with some example use-case goal/action suggestions, these model 
 trade-offs are summarized in Table~\ref{tab:tradeoff}.
 
-For additional reference, Table~\ref{tab:summary} includes a summary of all the model parameters 
+For additional reference, Table~\ref{tab:summary} includes a summary of the model parameters 
 introduced in this work.
 
 
@@ -739,7 +741,7 @@ Sampling operator & $S$	& PowerTrack sampling operator (e.g. ``sample:$S$'') \\
 
 Recall that the sampling operator allows us to reduce the full firehose of activities to a representative 
 subset of user-defined size. Selecting the value of $S$ is a process that often starts at $S =100\%$.  
-By carefully monitoring the number of activities, $n$, that are filtered through the rules, we get an 
+By monitoring the number of activities, $n$, that are filtered through the rules, we get an 
 estimate for $\bar{r}$.
 
 Assume that using 100\% of the firehose for one minute, we observe $n = 10$ activities. Further, assume 
@@ -748,79 +750,96 @@ $\eta = 3$. What value of $S$ should we choose to sample from the firehose?
 
 Imagine for this example that we are comfortable with a signal latency of two days -- i.e. our system 
 needs to react to signals in about two days. Given that we expect 10 activities per minute or 
-14400 activities per day, we need to meet our signal sensitivity criteria
-
+14,400 activities per day, we need to ensure we meet our signal sensitivity criteria:
 \begin{equation}
 \label{eq:ex1:criteria}
-\frac{\delta r}{\bar{r}} = \frac{1}{\text{Relative Interval Size}} = 
-	\frac{3(20-10 \text{ activities})}{\text{min}} \frac{1 \text{ min}}{10 \text{ activities}} = 3 
+\frac{\delta r}{\bar{r}} = \text{Relative Interval Size} = 
+	\frac{1}{3} 
+	\frac{(20-10) \text{ activities}}{\text{min}} 
+	\frac{1 \text{ min}}{10 \text{ activities}} = \frac{1}{3} 
 \end{equation}
 over this two-day period. Table~\ref{tab:conf} requires about 100 activities (total, over the two days) 
 for a relative interval size of $1/3 \approx 33\%$. Hence, instead of using $100\%$ of the 
-firehose, we could use $S = \frac{100}{28,800} << 1\% \rightarrow 1\%$.
+firehose, we can use $S = \frac{100}{28,800} << 1\% \rightarrow 1\%$\footnote{Recall from 
+Section~\ref{filter} that the sampling operator has a precision of $1\%$}.
 
 
-%Recall that the sampling operator allows us to reduce the full firehose of activities to a representative 
-%subset of user-defined size. Selecting the value of $S$ is a process that often starts at $S =100\%$.  
-%By carefully monitoring the number of activities, $n$, that are filtered through the rules, we get an 
-%estimate for $\bar{r}$.
-%
-%Using 100\% of the firehose for one minute, imagine that we observe $\bar{r}=10$ activities.  Further, say that 
-%we want to detect a change in activity rate of 20 activities per minute using $\eta = \frac{1}{3}$.  What sample
-%size should we extract from the firehose?  
-%
-%Imagine that for this problem, we are comfortable with a signal latency of 2 days--i.e. our system needs to 
-%react to signals in about 2 days.  Given that we expect $10$ activities per minute or $14400$ activities per day, 
-%we need to meet our signal sensitivity criteria,
-%
-%\begin{equation}
-%\label{eq:ex1:criteria}
-%\frac{\delta r}{\bar{r}} = \text{ Relative Interval Size} = \frac{1}{3}\frac{(20-10)}{\text{min}} \frac{1 \text{ min}}{10 \text{ activities}}= 33\% 
-%\end{equation}
-%over this 2-day period.  Table \ref{tab:conf} requires 100 activities for a $\text{ Relative Interval Size}$ of $33\%$. Hence, 
-%instead of using $100\%$ of the firehose, we could use $S = \frac{100}{28,000} << 1\%$.
 
    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Estimate Signal Latency} 
 \label{ex:2}
-% first pass at calc, 2013-04-18, BL
 
-Imagine we observe rate of 10 activities per minute and we want to detect a change in activity rate of 20 activities
-per minute.  How long does it take to identify a change in the activity rate as a signal with 90\% confidence level? 
-To calculate an answer, we will be using the signal sensitivity--Confidence Criteria, \ref{eq:criteriaParam} and 
-Confidence Interval Sizes from Table \ref{tab:conf}
 
-\begin{itemize}
-\item Calculating $T_{l}$
-\item Signal criteria factor $\eta=\frac{1}{3}$ -- In this case we choose a criteria that reflects our wish to see fewer false positives.
-\item Signal Sensitvity $\frac{\eta \Delta r}{\bar{r}} = \frac{1}{3}\frac{(20-10)}{min} \frac{1 min}{10 activities}= 33\%$
-\item Confidence Interval Size at $N =10$ is $11.54$. %Confidence intervals around $\r_bar$ only depend on N. 
-\end{itemize}
+Imagine we observe rate of 10 activities per minute and we want to detect a change in activity 
+rate from 10  to 20 activities per minute.  If we again use a value of $\eta = 3$, how long 
+does it take to identify such a change in 
+the activity rate as a signal with 90\% confidence level? To calculate an answer, we use the 
+signal sensitivity--Confidence Criteria, Equation~\ref{eq:criteriaParam} and Confidence Interval 
+Sizes from Table \ref{tab:conf}.
 
-It is clear that we cannot detect a change in activity rate of 10 activities/minute by measuring for only 1 min.  Notice that our criteria is not fulfilled:
+With a criteria factor of 3, our signal sensitivity is
+\begin{equation}
+\label{eq:ex2:latency}
+\frac{1}{\eta} \frac{\Delta r}{\bar{r}} = 	
+	\frac{1}{3} 
+	\frac{(20-10) \text{ activities}}{\text{min}} 
+	\frac{1 \text{ min}}{10 \text{ activities}} = \frac{1}{3} \approx 33\%,
+\end{equation}
+and with $n = 10$, our $90\%$ confidence interval size is about 11.54 (cf. Table~\ref{tab:conf}). 
+
+Comparing the confidence interval size to our signal sensitivity,
 \begin{equation}
     \label{eq:ex2:notmet}
-    \frac{\delta r}{\bar{r}} = \frac{(11.54)}{10} \approx 115.4\% \not\le 33\% 
+    \frac{\delta r}{\bar{r}} = \frac{(11.54)}{10} \approx 115.4\% \not\le 33\%, 
 \end{equation}
+we can see that we cannot detect an increase in rate of 10 activities per minute after just one 
+minute.
 
-The time $T_{l}$ that it takes to observe this signal $\Delta r =20$ with signal criteria factor of $\eta=\frac{1}{3}$ depends 
-on the total number of activities $N_t$ that we must observe to have a credible estimate of the activity rate. Because activities 
-are infrequent, we will look up the confidence interval size, synonymous to $\delta r$, for small numbers of activities 
-in Table \ref{tab:conf}.  As $N_t$ increases, the relative $90\%$ confidence interval size narrows around the 
-average rate, which can be seen through the decreasing relative interval value in Table \ref{tab:conf}.  We need to 
-find the value for $N_t$.
+To determine our signal latency, $T_l$, we use the signal sensitivity calculated above and 
+Table~\ref{tab:conf} to find the approximate number of activities we must observe to meet our 
+criteria. To ensure our relative confidence interval matches our signal sensitivity at $33\%$, we 
+see that we must observe approximately 100 activities. Since our previous rate, $\bar{r}_{low}$ 
+was 10 activities per minute, we determine that it will require $T_l = 10$ minutes of 
+observation to detect our desired change in signal.
 
-We can only detect a signal $\Delta r$ when our signal criteria is fulfilled:
-\begin{equation}
-    \label{eq:ex2:met}
-    \frac{\delta r}{\bar{r}} = \text{ Relative Interval Size} = 33\% =  \frac{\eta \Delta r}{\bar{r}}
-\end{equation}
 
-You can look up the required Relative Interval Size in Table $\ref{tab:conf}, 100\%/3 = 33\%$ to see
-that we need to observe at least 100 events on average to reach our criteria. Therefore, $T_l = 10 \text{ minutes}$ because
-we will have observed $100$ activities in $10$ minutes given $\bar{r} = \frac{10 \text{ activities}}{1 \text{ min}}$. That is, we 
-must observe 10 minutes of activities to detect our desired signal.
+%% original BL calc
+%Imagine we observe rate of 10 activities per minute and we want to detect a change in activity rate of 20 activities
+%per minute.  How long does it take to identify a change in the activity rate as a signal with 90\% confidence level? 
+%To calculate an answer, we will be using the signal sensitivity--Confidence Criteria, \ref{eq:criteriaParam} and 
+%Confidence Interval Sizes from Table \ref{tab:conf}
+%
+%\begin{itemize}
+%\item Calculating $T_{l}$
+%\item Signal criteria factor $\eta=\frac{1}{3}$ -- In this case we choose a criteria that reflects our wish to see fewer false positives.
+%\item Signal Sensitvity $\frac{\eta \Delta r}{\bar{r}} = \frac{1}{3}\frac{(20-10)}{min} \frac{1 min}{10 activities}= 33\%$
+%\item Confidence Interval Size at $N =10$ is $11.54$. %Confidence intervals around $\r_bar$ only depend on N. 
+%\end{itemize}
+%
+%It is clear that we cannot detect a change in activity rate of 10 activities/minute by measuring for only 1 min.  Notice that our criteria is not fulfilled:
+%\begin{equation}
+%    \label{eq:ex2:notmet}
+%    \frac{\delta r}{\bar{r}} = \frac{(11.54)}{10} \approx 115.4\% \not\le 33\% 
+%\end{equation}
+%
+%The time $T_{l}$ that it takes to observe this signal $\Delta r =20$ with signal criteria factor of $\eta=\frac{1}{3}$ depends 
+%on the total number of activities $N_t$ that we must observe to have a credible estimate of the activity rate. Because activities 
+%are infrequent, we will look up the confidence interval size, synonymous to $\delta r$, for small numbers of activities 
+%in Table \ref{tab:conf}.  As $N_t$ increases, the relative $90\%$ confidence interval size narrows around the 
+%average rate, which can be seen through the decreasing relative interval value in Table \ref{tab:conf}.  We need to 
+%find the value for $N_t$.
+%
+%We can only detect a signal $\Delta r$ when our signal criteria is fulfilled:
+%\begin{equation}
+%    \label{eq:ex2:met}
+%    \frac{\delta r}{\bar{r}} = \text{ Relative Interval Size} = 33\% =  \frac{\eta \Delta r}{\bar{r}}
+%\end{equation}
+%
+%You can look up the required Relative Interval Size in Table $\ref{tab:conf}, 100\%/3 = 33\%$ to see
+%that we need to observe at least 100 events on average to reach our criteria. Therefore, $T_l = 10 \text{ minutes}$ because
+%we will have observed $100$ activities in $10$ minutes given $\bar{r} = \frac{10 \text{ activities}}{1 \text{ min}}$. That is, we 
+%must observe 10 minutes of activities to detect our desired signal.
 
 
 %%%%%%%%%%%%%%%%
@@ -837,10 +856,10 @@ must observe 10 minutes of activities to detect our desired signal.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Estimate Signal Sensitivity}
 \label{ex:3}
-% first pass at calc, 2013-03-12, JM
 
 Suppose we would like to determine the magnitude of a signal change needed to 
-classify it as significant. As shown in Equation~\ref{eq:criteriaParam}, 
+classify it as significant. 
+As shown in Equation~\ref{eq:criteriaParam}, 
 classifying a signal $\Delta r$ as significant depends on the choice of criteria factor 
 $\eta$ and the observation parameters that determine the uncertainty $\delta r$. 
 Specifically, we will need to choose a criteria factor $\eta$ and confidence level 
@@ -848,20 +867,18 @@ $(1-\alpha)$, and our observation will be characterized by total activity count 
 and total time $T$.
 
 Let us assume we have decided to classify as significant a signal with $\eta = 10$, or 
-$\delta r = 10\times\Delta r$. Furthermore, we have chosen a 90\% confidence interval 
-($\alpha = 0.1$), and observed $n$=10,000 activities over a period of $T$=1 minute 
-(60 seconds) for an estimated activity rate of $\bar r = 167~\si{\per\second}$. We use 
+$\Delta r = 10 \times \delta r$. Furthermore, we have chosen a 90\% confidence interval 
+and observed $n$=10,000 activities over a period of $T$=1 minute 
+(60 seconds) for an estimated rate of $\bar r = 167$ activities per second. We use 
 Equation~\ref{eq:chisqconf} to calculate the interval of activities for our 
 90\% confidence level, and divide by observation period $T$ to obtain the corresponding 
-minimum significant activity rate $\delta r = 5~\si{\per\second}$. Recall, however, 
+minimum significant rate $\delta r = 5$ activities per second. Recall, however, 
 that we have also specified a criteria factor $\eta = 10$. Therefore, in this example, 
 in order to classify the change in rate as significant, we must observe a change at the 
-level of $\Delta r =\frac{1}{\eta} \delta r = 10 (5~\si{\per\second}) = 50~\si{\per\second}$. 
+level of $\Delta r =\eta \times \delta r = 10 \times 5 = 50$ activities per second. 
 For an increasing activity rate, this corresponds to a total activity rate of 
-$167~\si{\per\second} + 50~\si{\per\second} = 217~\si{\per\second}$. For a decreasing 
-rate, $117~\si{\per\second}$.
-
-
+$167 + 50 = 217$ activities per second. For a decreasing 
+rate, 117 activities per second.
 
 
 %Let us assume we have decided to classify as significant a signal with $\eta = \frac{1}{10}$, or 
@@ -887,18 +904,23 @@ rate, $117~\si{\per\second}$.
 %	of activities; the corresponding bounds on the rate are given by this interval divided by 
 % 	the time period, T=60 s: (10166.1-9836.1)/60 ~ 5 /s. 
 
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion} 
 
-This is intended to help you use the Gnip social data streams more effectively.  The latest version of this
-document and supporting code for creating figures and tables can be found at:
+This work is intended to enable more confident analysis and understanding of the social data 
+streams available through Gnip. A better understanding of the parameter trade-offs involved 
+in any sort of measurement will hopefully empower you to use these data more efficiently in 
+your own environment.
+
+The latest version of this document and supporting code for creating figures and tables 
+can be found at:
 
 \noindent \url{https://github.com/DrSkippy27/Gnip-Realtime-Social-Data-Sampling}.
 
-If you find errors
-or have comments, please email shendrickson@gnip.com. Thank you for using Gnip.
-
-This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License:
+If you find errors in this work, or have comments, please email shendrickson@gnip.com. This 
+work is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License:
 
 \noindent \url{http://creativecommons.org/licenses/by-sa/3.0/deed.en_US}.
 
