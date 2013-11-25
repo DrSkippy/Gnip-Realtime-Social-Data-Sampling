@@ -1,0 +1,6 @@
+I'm writing to touch base with you in regards to the Data Scientist position we spoke about last month.  I know you said things would move slowly, and then the terrible floods hit -- which everyone at Gnip is undoubtedly still dealing with --- but I just wanted to let you know I'm still interested in the position, if my application is still under consideration.
+
+As an aside, I read the white paper you guys put out a few weeks ago on sampling.  I enjoyed it; it actually reminded me of estimating neuron firing rates (it's essentially the same general problem). In the neuro case, though, there's a lot less focus on directly comparing activities at two time points. The emphasis there is placed on continuous estimation of the rate, so you see a lot of kernel smoothing and local likelihood estimation.  One thing I thought about while reading the paper in regards to choosing bin sizes was that because the Poisson assumption is so crucial to the test stat, perhaps some measure of how well the Poisson assumption holds for different sampling time periods (bin sizes) would be useful, e.g., the Fano factor.   Otherwise, it may be useful to smooth the activity using a Poisson local likelihood with a sufficiently small bandwidth and then applying your test statistic. 
+
+F=1 for poisson = sig^2/mu
+http://en.wikipedia.org/wiki/Fano_factor
