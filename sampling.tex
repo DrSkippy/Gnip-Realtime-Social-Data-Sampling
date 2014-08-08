@@ -99,8 +99,8 @@ through some example calculations.
 \label{Qs}
 
 Below are examples of questions regarding activity rate, signal, and confidence level that might 
-motivate the use of this whitepaper. The following Sections and example calculations will hopefully 
-help to answer these kinds of questions.
+motivate the use of this whitepaper. The following Sections and example calculations are intended 
+to answer these kinds of questions.
 
 \begin{itemize}
 	\item The activity rate has doubled from five counts to ten counts between two of my measurement 
@@ -233,11 +233,14 @@ The\reversemarginpar\marginpar{\raggedleft
     \label{eq:rateEst}
     \bar{r} = \frac{N}{T},
 \end{equation}
-where $N$ is the number of activities in a bucket of time length $T$. Due to the statistical
-variations in the number of activities in any given time interval, there exists an uncertainty in our 
-estimate of this average rate. Figure~\ref{fig:confidence} illustrates this idea that as we continue to 
-observe additional activities, our confidence in the underlying activity rate grows; the bounds shown 
-are those of a 95\% confidence interval.
+where $N$ is the number of activities in a bucket of time length $T$.  Due to
+the statistical variations in the number of activities in any given time
+interval, a single calculation of the average activity rate will be only an
+estimate of the true average.  Thus there exists an uncertainty in the estimate
+of this average rate.  Figure~\ref{fig:confidence} illustrates this idea that
+as we continue to observe additional activities, our confidence in the
+underlying activity rate grows; the bounds shown are those of a 95\% confidence
+interval.
 
 
 
@@ -276,8 +279,8 @@ are those of a 95\% confidence interval.
     \includegraphics[width=3.5in]{./imgs/fig3a.pdf}
     \includegraphics[width=3.5in]{./imgs/fig3b.pdf}
         \caption{A change in rate from the start time (left) to the end time (right) is established when the 
-		change is equal to -- or greater than -- the uncertainty in the rate earlier estimate. The upper 
-		image shows the point at which we cross this threshold. Before this criteria is met, the 
+		change is equal to -- or greater than -- the uncertainty in the earlier rate estimate. The upper 
+		image shows the point at which we cross this threshold. Before this condition is met, the 
 		change in rate remains within the uncertainty and observation of a signal is 
 		indeterminate. The lower image shows this situation.}
     \label{fig:signal}
@@ -310,7 +313,7 @@ Higher
 %
 %%%%%
 }
-underlying activity rates lead naturally to more certain estimates of said rate than lower ones. 
+underlying activity rates lead naturally to more certain estimates of said rates than lower ones. 
 For a low activity rate, it is possible that small changes in our estimated rate 
 (calculated from one bucket to the next) will be inconclusive; the statistics of infrequent events 
 lead to some amount of variation. In order to declare a valid signal, the variation due to e.g. 
@@ -917,7 +920,7 @@ your own environment.
 The latest version of this document and supporting code for creating figures and tables 
 can be found at:
 
-\noindent \url{https://github.com/DrSkippy27/Gnip-Realtime-Social-Data-Sampling}.
+\noindent \url{https://github.com/DrSkippy/Gnip-Realtime-Social-Data-Sampling}.
 
 If you find errors in this work, or have comments, please email shendrickson@gnip.com. This 
 work is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License:
