@@ -66,10 +66,10 @@ any two and then calculate the third.}
 In the world of real-time social data, we are typically observing a series of activities during some 
 period of time and are interested in identifying significant changes in the corresponding activity 
 rate. Such changes may be signals of emerging events or conversations. In this work, 
-we hope to assist current and potential Gnip customers in 
+% we hope to assist current and potential Gnip customers in 
 % thesis statement: help our customers better understand a) how to use PT b) how to set up their measurements
 
-we would like to quantify our ability to identify these kinds of signals. Figure~\ref{fig:tradeoff} 
+we intend to quantify our ability to identify these kinds of signals. Figure~\ref{fig:tradeoff} 
 illustrates (schematically) the three main parameters involved in such calculations: signal size, total 
 activities, and confidence. The three parameters are not simultaneously independent; we can 
 choose or measure two of them -- possibly based on our particular use-case -- and they will 
@@ -99,15 +99,15 @@ through some example calculations.
 \label{Qs}
 
 Below are examples of questions regarding activity rate, signal, and confidence level that might 
-motivate the use of this whitepaper. The following Sections and example calculations will hopefully 
-help to answer these kinds of questions.
+motivate the use of this whitepaper. The following Sections and example calculations are intended 
+to answer these kinds of questions.
 
 \begin{itemize}
 	\item The activity rate has doubled from five counts to ten counts between two of my measurement 
 buckets. Is this change significant, or is this expected variation e.g. due to low-frequency events?
 	\item I want to minimize the total number activities that I consume (for reasons of cost, storage, etc). 
 How can I do this while still detecting a factor of two change in activity rate in 1 hour?
-	\item How long should I count activities to detect a change in signal of 5\%?
+	\item How long should I count activities to detect a change in activity rate of 5\%?
 	\item How do I describe the trade-off between signal latency and activity rate uncertainty?
 	\item How do I define confidence levels on activity rate estimates for a time series with only twenty 
 events per day?
@@ -233,11 +233,14 @@ The\reversemarginpar\marginpar{\raggedleft
     \label{eq:rateEst}
     \bar{r} = \frac{N}{T},
 \end{equation}
-where $N$ is the number of activities in a bucket of time length $T$. Due to the statistical
-variations in the number of activities in any given time interval, there exists an uncertainty in our 
-estimate of this average rate. Figure~\ref{fig:confidence} illustrates this idea that as we continue to 
-observe additional activities, our confidence in the underlying activity rate grows; the bounds shown 
-are those of a 95\% confidence interval.
+where $N$ is the number of activities in a bucket of time length $T$.  Due to
+the statistical variations in the number of activities in any given time
+interval, a single calculation of the average activity rate will be only an
+estimate of the true average.  Thus there exists an uncertainty in the estimate
+of this average rate.  Figure~\ref{fig:confidence} illustrates this idea that
+as we continue to observe additional activities, our confidence in the
+underlying activity rate grows; the bounds shown are those of a 95\% confidence
+interval.
 
 
 
@@ -276,8 +279,8 @@ are those of a 95\% confidence interval.
     \includegraphics[width=3.5in]{./imgs/fig3a.pdf}
     \includegraphics[width=3.5in]{./imgs/fig3b.pdf}
         \caption{A change in rate from the start time (left) to the end time (right) is established when the 
-		change is equal to -- or greater than -- the uncertainty in the rate earlier estimate. The upper 
-		image shows the point at which we cross this threshold. Before this criteria is met, the 
+		change is equal to -- or greater than -- the uncertainty in the earlier rate estimate. The upper 
+		image shows the point at which we cross this threshold. Before this condition is met, the 
 		change in rate remains within the uncertainty and observation of a signal is 
 		indeterminate. The lower image shows this situation.}
     \label{fig:signal}
@@ -310,7 +313,7 @@ Higher
 %
 %%%%%
 }
-underlying activity rates lead naturally to more certain estimates of said rate than lower ones. 
+underlying activity rates lead naturally to more certain estimates of said rates than lower ones. 
 For a low activity rate, it is possible that small changes in our estimated rate 
 (calculated from one bucket to the next) will be inconclusive; the statistics of infrequent events 
 lead to some amount of variation. In order to declare a valid signal, the variation due to e.g. 
@@ -749,19 +752,21 @@ that we would like to detect a change in activity rate from 10 to 20 activities 
 $\eta = 3$. What value of $S$ should we choose to sample from the firehose?
 
 Imagine for this example that we are comfortable with a signal latency of two days -- i.e. our system 
-needs to react to signals in about two days. Given that we expect 10 activities per minute or 
-14,400 activities per day, we need to ensure we meet our signal sensitivity criteria:
+needs to react to signals in about two days. Given that we expect 10 activities per minute, we should 
+see on average 14,400 activities per day in the full firehose. To calculate the relative interval size, we
+use Equation~\ref{eq:criteriaParam} and our knowledge of the desired signal sensitivity:
 \begin{equation}
 \label{eq:ex1:criteria}
 \frac{\delta r}{\bar{r}} = \text{Relative Interval Size} = 
 	\frac{1}{3} 
 	\frac{(20-10) \text{ activities}}{\text{min}} 
-	\frac{1 \text{ min}}{10 \text{ activities}} = \frac{1}{3} 
+	\frac{1 \text{ min}}{10 \text{ activities}} = \frac{1}{3}.
 \end{equation}
-over this two-day period. Table~\ref{tab:conf} requires about 100 activities (total, over the two days) 
-for a relative interval size of $1/3 \approx 33\%$. Hence, instead of using $100\%$ of the 
-firehose, we can use $S = \frac{100}{28,800} << 1\% \rightarrow 1\%$\footnote{Recall from 
-Section~\ref{filter} that the sampling operator has a precision of $1\%$}.
+For a relative interval size of $1/3 \approx 33\%$, Table~\ref{tab:conf}
+requires about 100 activities (total, over the two days) . Hence, instead of
+using $100\%$ of the firehose, we can use $S = \frac{100}{2*14,400} << 1\%
+\rightarrow 1\%$\footnote{Recall from Section~\ref{filter} that the sampling
+operator has a precision of $1\%$}.
 
 
 
@@ -801,7 +806,7 @@ Table~\ref{tab:conf} to find the approximate number of activities we must observ
 criteria. To ensure our relative confidence interval matches our signal sensitivity at $33\%$, we 
 see that we must observe approximately 100 activities. Since our previous rate, $\bar{r}_{low}$ 
 was 10 activities per minute, we determine that it will require $T_l = 10$ minutes of 
-observation to detect our desired change in signal.
+observation to detect our desired change in activity rate.
 
 
 %% original BL calc
@@ -857,7 +862,7 @@ observation to detect our desired change in signal.
 \subsection{Estimate Signal Sensitivity}
 \label{ex:3}
 
-Suppose we would like to determine the magnitude of a signal change needed to 
+Suppose we would like to determine the magnitude of a change in activity rate needed to 
 classify it as significant. 
 As shown in Equation~\ref{eq:criteriaParam}, 
 classifying a signal $\Delta r$ as significant depends on the choice of criteria factor 
@@ -917,7 +922,7 @@ your own environment.
 The latest version of this document and supporting code for creating figures and tables 
 can be found at:
 
-\noindent \url{https://github.com/DrSkippy27/Gnip-Realtime-Social-Data-Sampling}.
+\noindent \url{https://github.com/DrSkippy/Gnip-Realtime-Social-Data-Sampling}.
 
 If you find errors in this work, or have comments, please email shendrickson@gnip.com. This 
 work is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License:
