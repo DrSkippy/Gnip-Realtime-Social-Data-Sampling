@@ -8,6 +8,7 @@
 
 \usepackage[margin=0.75cm]{caption}
 \usepackage{hyperref}
+\usepackage{pdfpages}
 
 % see http://texblog.org/2008/05/07/fwd-equal-cell-width-right-and-centre-aligned-content/
 \newcolumntype{x}[1]{%
@@ -20,7 +21,9 @@
 \affil[]{ \Large{Gnip, Inc.} }
 
 \begin{document}
-\maketitle
+\includepdf[pages={1}]{imgs/WhitePaper_Front_Cover.pdf}
+%\maketitle
+
 
 \frenchspacing
 
@@ -65,10 +68,11 @@ any two and then calculate the third.}
 
 In the world of real-time social data, we are typically observing a series of activities during some 
 period of time and are interested in identifying significant changes in the corresponding activity 
-rate. Such changes may be signals of emerging events or conversations. In this work, 
+rate. Such changes may be signals of emerging events or conversations. 
+
+In this work, 
 % we hope to assist current and potential Gnip customers in 
 % thesis statement: help our customers better understand a) how to use PT b) how to set up their measurements
-
 we intend to quantify our ability to identify these kinds of signals. Figure~\ref{fig:tradeoff} 
 illustrates (schematically) the three main parameters involved in such calculations: signal size, total 
 activities, and confidence. The three parameters are not simultaneously independent; we can 
@@ -337,7 +341,7 @@ the activity rate is measured. The associated time duration $T_l = t_f - t_i$ is
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Signal Sensitivity--Confidence Criteria} 
-\label{conf}
+\label{conf1}
 
 
 If  
@@ -470,7 +474,7 @@ following a Poisson distribution:
     P(n) = \frac{e^{-r t} (r t)^n}{n!}.
 \end{equation}
 The expected value of this distribution $E[n]=n=rt$. The mean and variance of the Poisson distribution are 
-both equal to $r$\cite{tbd}.
+both equal to $r$\cite{Devore:1999}.
 
 
 
@@ -940,6 +944,9 @@ work is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported Li
 \bibitem[Geo12]{George:2012} F. George B. Golam Kibria, \textsl{Confidence Intervals for Signal to Noise Ratio of
 a Poisson Distribution}, \url{http://thescipub.com/abstract/10.3844/amjbsp.2011.44.55} 2013.
 
+\bibitem[Dev99]{Devore:1999} J. Devore, \textsl{Probability and Statistics for Engineering and the Sciences}, Duxbury, 1999
+
 \end{thebibliography}
+\includepdf[pages={1,2}]{imgs/WhitePaper_Back_Cover.pdf}
 
 \end{document}
